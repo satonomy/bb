@@ -1,0 +1,30 @@
+# Rust build artifacts
+/target/
+**/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+output
+
+# Generated WebAssembly files
+*.wasm
+*.wasm.map
+*.wat
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+/node_modules/
+/pkg/
+/wasm-pack.log
+
+src/tests/std
+
+.env
