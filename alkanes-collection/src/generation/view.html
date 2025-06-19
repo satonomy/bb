@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="./" />
+    <title>10k NFT Randomizer & Filter</title>
+    <style>
+      body {
+        background: #18181b;
+        color: #fff;
+        font-family: monospace;
+        padding: 2rem;
+      }
+      button,
+      select {
+        background: #23232b;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        margin: 0 0.3rem 1rem 0;
+        padding: 6px 16px;
+      }
+      #controls {
+        margin-bottom: 1rem;
+        display: none;
+      }
+      #previewArea {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin: 2rem 0;
+      }
+      .nft-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .nft-stack {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        background: #18181b;
+      }
+      .nft-stack img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+      }
+      .nft-index {
+        color: #aaa;
+        font-size: 11px;
+      }
+      .paging {
+        margin: 1.5rem 0 1rem 0;
+        display: none;
+      }
+      .paging button {
+        padding: 5px 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>10,000 NFT Generator, Filter & Preview</h2>
+    <button id="generate10k">Generate 10,000 NFTs</button>
+    <div id="controls">
+      Filter:
+      <select id="filterLayer">
+        <option value="">(Choose layer)</option>
+        <option value="Background">Background</option>
+        <option value="Back">Back</option>
+        <option value="Body">Body</option>
+        <option value="Head">Head</option>
+        <option value="Hat">Hat</option>
+        <option value="Hand">Hand</option>
+      </select>
+      <select id="filterTrait" style="display: none"></select>
+      <button id="clearFilter" style="display: none">Show All</button>
+    </div>
+    <div id="paging" class="paging"></div>
+    <div id="previewArea"></div>
+    <script>
+      const traitFiles = {
+        Background: [
+          "Blue.png",
+          "Green.png",
+          "Cyan.png",
+          "Stars.png",
+          "Red.png",
+          "Purple.png",
+        ],
+        Back: [
+          "Fairy Wings.png",
+          "Backpack.png",
+          "Imp Wings.png",
+          "Drone 01.png",
+          "Drone 03.png",
+          "Drone 02.png",
+          "Jetpack.png",
+          "Golden Wings.png",
+          "Golden Jetpack.png",
+          "Angel Wings.png",
+        ],
+        Body: [
+          "Red Mainframe 09.png",
+          "Hooded Sweatshirt.png",
+          "Lab Coat.png",
+          "Red Mainframe 08.png",
+          "Red Plumber Overalls.png",
+          "Suit.png",
+          "Leather Jacket.png",
+          "Red Skull Shirt.png",
+          "Skull Shirt.png",
+          "Butcher Apron.png",
+          "Green Butcher Apron.png",
+          "Mainframe 03.png",
+          "Blue Mainframe 07.png",
+          "Blue Mainframe 06.png",
+          "Mainframe 02.png",
+          "Blue Mainframe 04.png",
+          "Blue Mainframe 10.png",
+          "Blue Mainframe 05.png",
+          "Golden Frame.png",
+          "Mainframe 01.png",
+          "Mainframe 05.png",
+          "Blue Mainframe 01.png",
+          "Mainframe 10.png",
+          "Mainframe 04.png",
+          "Mainframe 06.png",
+          "Green Mainframe 09.png",
+          "Blue Mainframe 02.png",
+          "Green Plumber Overalls.png",
+          "Blue Mainframe 03.png",
+          "Mainframe 07.png",
+          "Green Mainframe 08.png",
+          "Green Mainframe 05.png",
+          "Golden Chassis.png",
+          "Golden Hull.png",
+          "Green Mainframe 10.png",
+          "Mainframe 09.png",
+          "Red Butcher Apron.png",
+          "Mainframe 08.png",
+          "Green Mainframe 03.png",
+          "Blue Mainframe 08.png",
+          "Blue Mainframe 09.png",
+          "Green Mainframe 02.png",
+          "Green Mainframe 01.png",
+          "Plumber Overalls.png",
+          "Red Mainframe 06.png",
+          "Striped Shirt.png",
+          "Red Mainframe 05.png",
+          "Red Lab Coat.png",
+          "Red Mainframe 10.png",
+          "Red Mainframe 04.png",
+          "Blazer.png",
+        ],
+        Head: [
+          "Green Processing Unit 13.png",
+          "Green Processing Unit 07.png",
+          "Green Processing Unit 06.png",
+          "Green Processing Unit 12.png",
+          "Green Processing Unit 04.png",
+          "Green Processing Unit 10.png",
+          "Golden Neuron.png",
+          "Brain Unit.png",
+          "Organic Unit.png",
+          "Party Glasses.png",
+          "Green Sunglasses.png",
+          "Green Party Glasses.png",
+          "Processing Unit 08.png",
+          "Processing Unit 09.png",
+          "Red Processing Unit 14.png",
+          "Red Processing Unit 11.png",
+          "Red Processing Unit 04.png",
+          "Red Processing Unit 10.png",
+          "Red Processing Unit 06.png",
+          "Red Processing Unit 12.png",
+          "Red Processing Unit 13.png",
+          "Red Processing Unit 07.png",
+          "Seed Unit.png",
+          "Processing Unit 01.png",
+          "Golden Cortex.png",
+          "Processing Unit 14.png",
+          "Red Processing Unit 09.png",
+          "Processing Unit 02.png",
+          "Processing Unit 03.png",
+          "Red Processing Unit 08.png",
+          "Processing Unit 07.png",
+          "Processing Unit 13.png",
+          "Processing Unit 12.png",
+          "Processing Unit 06.png",
+          "Processing Unit 10.png",
+          "Processing Unit 04.png",
+          "Processing Unit 05.png",
+          "Processing Unit 11.png",
+          "Golden Analyzer.png",
+          "Blue Processing Unit 13.png",
+          "Blue Sunglasses.png",
+          "Sunglasses.png",
+          "Blue Processing Unit 06.png",
+          "Blue Processing Unit 12.png",
+          "Red Sunglasses.png",
+          "Blue Processing Unit 04.png",
+          "Blue Processing Unit 10.png",
+          "Golden Synapse.png",
+          "Blue Processing Unit 05.png",
+          "Energy Unit.png",
+          "Blue Processing Unit 01.png",
+          "Red Party Glasses.png",
+          "Blue Processing Unit 03.png",
+          "Blue Party Glasses.png",
+        ],
+        Hat: [
+          "Egg Basket.png",
+          "Trainer Cap.png",
+          "Baseball Cap.png",
+          "Propeller Hat.png",
+          "Golden Halo.png",
+          "Signal Antenna.png",
+          "Golden Egg Basket.png",
+          "Beanie.png",
+          "Bird Hat.png",
+          "Gentleman Hat.png",
+          "Cooking Hat.png",
+          "Adventurer Hat.png",
+          "Farmer Hat.png",
+          "Mushroom Hat.png",
+          "Magic Hat.png",
+          "Mining Hat.png",
+          "Radio Antenna.png",
+          "Plumber Hat.png",
+          "Magician Hat.png",
+          "Royal Crown.png",
+          "Pirate Hat.png",
+          "Cowboy Hat.png",
+          "Mice Hat.png",
+        ],
+        Hand: [
+          "Racket.png",
+          "Red Red Lightsaber.png",
+          "Flash Drive.png",
+          "Coffe Mug.png",
+          "Red Walkie-talkie.png",
+          "Green Racket.png",
+          "Butcher Knife.png",
+          "Alien Gun.png",
+          "Golden Rail Gun.png",
+          "Green Magic Wand.png",
+          "Green Lightsaber.png",
+          "Green Coffe Mug.png",
+          "Walkie-talkie.png",
+          "Green Walkie-talkie.png",
+          "Green Rail Gun.png",
+          "Alien Sword.png",
+          "Beer Mug.png",
+          "Red Alien Sword.png",
+          "Golden Lightsaber.png",
+          "Green Beer Mug.png",
+          "Green Green Lightsaber.png",
+          "Rail Gun.png",
+          "Elder Staff.png",
+          "Red Lightsaber.png",
+          "Green Burger & Fork.png",
+          "Burger & Fork.png",
+          "Red Magic Wand.png",
+          "Green Elder Staff.png",
+          "Red Coffe Mug.png",
+          "Magic Wand.png",
+          "Red Elder Staff.png",
+        ],
+      }
+      const backgroundWeights = { "Stars.png": 0.2 }
+      const hatWeights = { "Mice Hat.png": 0.5 }
+      const LAYER_ORDER = [
+        { key: "Background", folder: "Background" },
+        { key: "Back", folder: "Back" },
+        { key: "Body", folder: "Body" },
+        { key: "Head", folder: "Head" },
+        { key: "Hat", folder: "Hat" },
+        { key: "Hand", folder: "Hand" },
+      ]
+      function weightedPick(arr, weights) {
+        let total = 0
+        for (const v of arr) total += weights[v] || 1
+        let r = Math.random() * total
+        for (const v of arr) {
+          const w = weights[v] || 1
+          if (r < w) return v
+          r -= w
+        }
+        return arr[arr.length - 1]
+      }
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)]
+      }
+      function getRandomTraits() {
+        const t = {}
+        t.Background = weightedPick(traitFiles.Background, backgroundWeights)
+        t.Back = pick(traitFiles.Back)
+        t.Body = pick(traitFiles.Body)
+        const m = t.Body.match(/\b(Red|Blue|Green|Golden)\b/)
+        const color = m ? m[1] : null
+        let headPool = color
+          ? traitFiles.Head.filter((n) => new RegExp(`\\b${color}\\b`).test(n))
+          : traitFiles.Head.filter((n) => !/(Red|Blue|Green|Golden)/.test(n))
+        t.Head = headPool.length ? pick(headPool) : pick(traitFiles.Head)
+        t.Hat = weightedPick(traitFiles.Hat, hatWeights)
+        const handChance = 0.25
+        if (color) {
+          const hp = traitFiles.Hand.filter((n) =>
+            new RegExp(`\\b${color}\\b`).test(n)
+          )
+          t.Hand =
+            Math.random() < handChance ? (hp.length ? pick(hp) : null) : null
+        } else {
+          t.Hand = Math.random() < handChance ? pick(traitFiles.Hand) : null
+        }
+        return t
+      }
+      function loadImageSafe(path) {
+        return new Promise((r) => {
+          const i = new Image()
+          i.onload = () => r(i)
+          i.onerror = () => r(null)
+          i.src = path
+        })
+      }
+      async function renderNFT(traits) {
+        const s = document.createElement("div")
+        s.className = "nft-stack"
+        for (const L of LAYER_ORDER) {
+          const f = traits[L.key]
+          if (!f) continue
+          const img = await loadImageSafe(
+            `traits/${L.folder}/${encodeURIComponent(f)}`
+          )
+          if (img) s.appendChild(img)
+        }
+        return s
+      }
+      let nft10k = [],
+        filtered = [],
+        currentPage = 0,
+        pageSize = 50
+      function renderPage(arr, page) {
+        const area = document.getElementById("previewArea")
+        area.innerHTML = ""
+        ;(async () => {
+          const start = page * pageSize
+          for (let i = 0; i < Math.min(pageSize, arr.length - start); i++) {
+            const w = document.createElement("div")
+            w.className = "nft-preview"
+            const node = await renderNFT(arr[start + i])
+            w.appendChild(node)
+            w.innerHTML += `<span class="nft-index">#${start + i}</span>`
+            area.appendChild(w)
+          }
+        })()
+      }
+      function updatePaging(total, page) {
+        const pages = Math.ceil(total / pageSize),
+          pg = document.getElementById("paging")
+        pg.innerHTML = ""
+        pg.style.display = pages > 1 ? "block" : "none"
+        for (let p = 0; p < pages; p++) {
+          const b = document.createElement("button")
+          b.textContent = p + 1
+          if (p === page) b.style.background = "#666"
+          b.onclick = () => {
+            currentPage = p
+            renderPage(filtered, p)
+            updatePaging(filtered.length, p)
+          }
+          pg.appendChild(b)
+        }
+      }
+      document.getElementById("filterLayer").onchange = function () {
+        const layer = this.value,
+          sel = document.getElementById("filterTrait")
+        sel.style.display = layer ? "" : "none"
+        sel.innerHTML = ""
+        if (layer)
+          traitFiles[layer].forEach((t) => {
+            const o = document.createElement("option")
+            o.value = o.textContent = t
+            sel.appendChild(o)
+          })
+        document.getElementById("clearFilter").style.display = "none"
+      }
+      document.getElementById("filterTrait").onchange = function () {
+        const layer = document.getElementById("filterLayer").value
+        filtered = nft10k.filter((tr) => tr[layer] === this.value)
+        currentPage = 0
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+        document.getElementById("clearFilter").style.display = ""
+      }
+      document.getElementById("clearFilter").onclick = function () {
+        filtered = nft10k
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+        this.style.display = "none"
+        document.getElementById("filterTrait").style.display = "none"
+        document.getElementById("filterLayer").value = ""
+      }
+      document.getElementById("generate10k").onclick = () => {
+        nft10k = Array.from({ length: 10000 }, getRandomTraits)
+        filtered = nft10k
+        currentPage = 0
+        document.getElementById("controls").style.display = ""
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+      }
+    </script>
+  </body>
+</html>
+<!-- <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="./" />
+    <title>10k NFT Randomizer & Filter</title>
+    <style>
+      body {
+        background: #18181b;
+        color: #fff;
+        font-family: monospace;
+        padding: 2rem;
+      }
+      button,
+      select {
+        background: #23232b;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        margin: 0 0.3rem 1rem 0;
+        padding: 6px 16px;
+      }
+      #controls {
+        margin-bottom: 1rem;
+      }
+      #previewArea {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin: 2rem 0;
+      }
+      .nft-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .nft-stack {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        background: #18181b;
+      }
+      .nft-stack img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+      }
+      .nft-index {
+        color: #aaa;
+        font-size: 11px;
+      }
+      .paging {
+        margin: 1.5rem 0 1rem 0;
+      }
+      .paging button {
+        padding: 5px 18px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>10,000 NFT Generator, Filter & Preview</h2>
+    <button id="generate10k">Generate 10,000 NFTs</button>
+    <div id="controls" style="display: none">
+      Filter:
+      <select id="filterLayer">
+        <option value="">(Choose layer)</option>
+        <option value="Background">Background</option>
+        <option value="Back">Back</option>
+        <option value="Body">Body</option>
+        <option value="Head">Head</option>
+        <option value="Hat">Hat</option>
+        <option value="Hand">Hand</option>
+      </select>
+      <select id="filterTrait" style="display: none"></select>
+      <button id="clearFilter" style="display: none">Show All</button>
+    </div>
+    <div id="paging" class="paging" style="display: none"></div>
+    <div id="previewArea"></div>
+
+    <script>
+      const traitFiles = {
+        Background: [
+          "Blue.png",
+          "Green.png",
+          "Cyan.png",
+          "Stars.png",
+          "Red.png",
+          "Purple.png",
+        ],
+        Back: [
+          "Fairy Wings.png",
+          "Backpack.png",
+          "Imp Wings.png",
+          "Drone 01.png",
+          "Drone 03.png",
+          "Drone 02.png",
+          "Jetpack.png",
+          "Golden Wings.png",
+          "Golden Jetpack.png",
+          "Angel Wings.png",
+        ],
+        Body: [
+          "Red Mainframe 09.png",
+          "Hooded Sweatshirt.png",
+          "Lab Coat.png",
+          "Red Mainframe 08.png",
+          "Red Plumber Overalls.png",
+          "Suit.png",
+          "Leather Jacket.png",
+          "Red Skull Shirt.png",
+          "Skull Shirt.png",
+          "Butcher Apron.png",
+          "Green Butcher Apron.png",
+          "Mainframe 03.png",
+          "Blue Mainframe 07.png",
+          "Blue Mainframe 06.png",
+          "Mainframe 02.png",
+          "Blue Mainframe 04.png",
+          "Blue Mainframe 10.png",
+          "Blue Mainframe 05.png",
+          "Golden Frame.png",
+          "Mainframe 01.png",
+          "Mainframe 05.png",
+          "Blue Mainframe 01.png",
+          "Mainframe 10.png",
+          "Mainframe 04.png",
+          "Mainframe 06.png",
+          "Green Mainframe 09.png",
+          "Blue Mainframe 02.png",
+          "Green Plumber Overalls.png",
+          "Blue Mainframe 03.png",
+          "Mainframe 07.png",
+          "Green Mainframe 08.png",
+          "Green Mainframe 05.png",
+          "Golden Chassis.png",
+          "Golden Hull.png",
+          "Green Mainframe 10.png",
+          "Mainframe 09.png",
+          "Red Butcher Apron.png",
+          "Mainframe 08.png",
+          "Green Mainframe 03.png",
+          "Blue Mainframe 08.png",
+          "Blue Mainframe 09.png",
+          "Green Mainframe 02.png",
+          "Green Mainframe 01.png",
+          "Plumber Overalls.png",
+          "Red Mainframe 06.png",
+          "Striped Shirt.png",
+          "Red Mainframe 05.png",
+          "Red Lab Coat.png",
+          "Red Mainframe 10.png",
+          "Red Mainframe 04.png",
+          "Blazer.png",
+        ],
+        Head: [
+          "Green Processing Unit 13.png",
+          "Green Processing Unit 07.png",
+          "Green Processing Unit 06.png",
+          "Green Processing Unit 12.png",
+          "Green Processing Unit 04.png",
+          "Green Processing Unit 10.png",
+          "Golden Neuron.png",
+          "Brain Unit.png",
+          "Organic Unit.png",
+          "Party Glasses.png",
+          "Green Sunglasses.png",
+          "Green Party Glasses.png",
+          "Processing Unit 08.png",
+          "Processing Unit 09.png",
+          "Red Processing Unit 14.png",
+          "Red Processing Unit 11.png",
+          "Red Processing Unit 04.png",
+          "Red Processing Unit 10.png",
+          "Red Processing Unit 06.png",
+          "Red Processing Unit 12.png",
+          "Red Processing Unit 13.png",
+          "Red Processing Unit 07.png",
+          "Seed Unit.png",
+          "Processing Unit 01.png",
+          "Golden Cortex.png",
+          "Processing Unit 14.png",
+          "Red Processing Unit 09.png",
+          "Processing Unit 02.png",
+          "Processing Unit 03.png",
+          "Red Processing Unit 08.png",
+          "Processing Unit 07.png",
+          "Processing Unit 13.png",
+          "Processing Unit 12.png",
+          "Processing Unit 06.png",
+          "Processing Unit 10.png",
+          "Processing Unit 04.png",
+          "Processing Unit 05.png",
+          "Processing Unit 11.png",
+          "Golden Analyzer.png",
+          "Blue Processing Unit 13.png",
+          "Blue Sunglasses.png",
+          "Sunglasses.png",
+          "Blue Processing Unit 06.png",
+          "Blue Processing Unit 12.png",
+          "Red Sunglasses.png",
+          "Blue Processing Unit 04.png",
+          "Blue Processing Unit 10.png",
+          "Golden Synapse.png",
+          "Blue Processing Unit 05.png",
+          "Energy Unit.png",
+          "Blue Processing Unit 01.png",
+          "Red Party Glasses.png",
+          "Blue Processing Unit 03.png",
+          "Blue Party Glasses.png",
+        ],
+        Hat: [
+          "Egg Basket.png",
+          "Trainer Cap.png",
+          "Baseball Cap.png",
+          "Propeller Hat.png",
+          "Golden Halo.png",
+          "Signal Antenna.png",
+          "Golden Egg Basket.png",
+          "Beanie.png",
+          "Bird Hat.png",
+          "Gentleman Hat.png",
+          "Cooking Hat.png",
+          "Adventurer Hat.png",
+          "Farmer Hat.png",
+          "Mushroom Hat.png",
+          "Magic Hat.png",
+          "Mining Hat.png",
+          "Radio Antenna.png",
+          "Plumber Hat.png",
+          "Magician Hat.png",
+          "Royal Crown.png",
+          "Pirate Hat.png",
+          "Cowboy Hat.png",
+          "Mice Hat.png",
+        ],
+        Hand: [
+          "Racket.png",
+          "Red Red Lightsaber.png",
+          "Flash Drive.png",
+          "Coffe Mug.png",
+          "Red Walkie-talkie.png",
+          "Green Racket.png",
+          "Butcher Knife.png",
+          "Alien Gun.png",
+          "Golden Rail Gun.png",
+          "Green Magic Wand.png",
+          "Green Lightsaber.png",
+          "Green Coffe Mug.png",
+          "Walkie-talkie.png",
+          "Green Walkie-talkie.png",
+          "Green Rail Gun.png",
+          "Alien Sword.png",
+          "Beer Mug.png",
+          "Red Alien Sword.png",
+          "Golden Lightsaber.png",
+          "Green Beer Mug.png",
+          "Green Green Lightsaber.png",
+          "Rail Gun.png",
+          "Elder Staff.png",
+          "Red Lightsaber.png",
+          "Green Burger & Fork.png",
+          "Burger & Fork.png",
+          "Red Magic Wand.png",
+          "Green Elder Staff.png",
+          "Red Coffe Mug.png",
+          "Magic Wand.png",
+          "Red Elder Staff.png",
+        ],
+      }
+
+      const LAYER_ORDER = [
+        { key: "Background", folder: "Background" },
+        { key: "Back", folder: "Back" },
+        { key: "Body", folder: "Body" },
+        { key: "Head", folder: "Head" },
+        { key: "Hat", folder: "Hat" },
+        { key: "Hand", folder: "Hand" },
+      ]
+
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)]
+      }
+
+      function getRandomTraits() {
+        const t = {}
+        t.Background = pick(traitFiles.Background)
+        t.Back = pick(traitFiles.Back)
+        t.Body = pick(traitFiles.Body)
+
+        const m = t.Body.match(/\b(Red|Blue|Green|Golden)\b/)
+        const color = m ? m[1] : null
+
+        // Head matching
+        let headPool
+        if (color) {
+          headPool = traitFiles.Head.filter((name) =>
+            new RegExp(`\\b${color}\\b`).test(name)
+          )
+        } else {
+          headPool = traitFiles.Head.filter(
+            (name) => !/(Red|Blue|Green|Golden)/.test(name)
+          )
+        }
+        t.Head = headPool.length ? pick(headPool) : pick(traitFiles.Head)
+
+        t.Hat = pick(traitFiles.Hat)
+
+        // Hand matching at 25% chance
+        const handChance = 0.25
+        if (color) {
+          const handPool = traitFiles.Hand.filter((name) =>
+            new RegExp(`\\b${color}\\b`).test(name)
+          )
+          t.Hand =
+            Math.random() < handChance
+              ? handPool.length
+                ? pick(handPool)
+                : null
+              : null
+        } else {
+          t.Hand = Math.random() < handChance ? pick(traitFiles.Hand) : null
+        }
+
+        return t
+      }
+
+      function loadImageSafe(path) {
+        return new Promise((res) => {
+          const img = new Image()
+          img.onload = () => res(img)
+          img.onerror = () => res(null)
+          img.src = path
+        })
+      }
+
+      async function renderNFT(traits) {
+        const stack = document.createElement("div")
+        stack.className = "nft-stack"
+        for (const layer of LAYER_ORDER) {
+          const file = traits[layer.key]
+          if (!file) continue
+          const img = await loadImageSafe(
+            `traits/${layer.folder}/${encodeURIComponent(file)}`
+          )
+          if (img) stack.appendChild(img)
+        }
+        return stack
+      }
+
+      let nft10k = [],
+        filtered = [],
+        currentPage = 0,
+        pageSize = 50
+
+      function renderPage(arr, page) {
+        const area = document.getElementById("previewArea")
+        area.innerHTML = ""
+        ;(async () => {
+          const start = page * pageSize
+          for (let i = 0; i < Math.min(pageSize, arr.length - start); i++) {
+            const wrap = document.createElement("div")
+            wrap.className = "nft-preview"
+            const node = await renderNFT(arr[start + i])
+            wrap.appendChild(node)
+            wrap.innerHTML += `<span class="nft-index">#${start + i}</span>`
+            area.appendChild(wrap)
+          }
+        })()
+      }
+
+      function updatePaging(total, page) {
+        const pages = Math.ceil(total / pageSize)
+        const pg = document.getElementById("paging")
+        pg.innerHTML = ""
+        pg.style.display = pages > 1 ? "block" : "none"
+        for (let p = 0; p < pages; p++) {
+          const btn = document.createElement("button")
+          btn.textContent = p + 1
+          if (p === page) btn.style.background = "#666"
+          btn.onclick = () => {
+            currentPage = p
+            renderPage(filtered, p)
+            updatePaging(filtered.length, p)
+          }
+          pg.appendChild(btn)
+        }
+      }
+
+      document.getElementById("filterLayer").onchange = function () {
+        const layer = this.value,
+          sel = document.getElementById("filterTrait")
+        sel.style.display = layer ? "" : "none"
+        sel.innerHTML = ""
+        if (layer) {
+          traitFiles[layer].forEach((t) => {
+            const opt = document.createElement("option")
+            opt.value = opt.textContent = t
+            sel.appendChild(opt)
+          })
+        }
+        document.getElementById("clearFilter").style.display = "none"
+      }
+
+      document.getElementById("filterTrait").onchange = function () {
+        const layer = document.getElementById("filterLayer").value
+        filtered = nft10k.filter((tr) => tr[layer] === this.value)
+        currentPage = 0
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+        document.getElementById("clearFilter").style.display = ""
+      }
+
+      document.getElementById("clearFilter").onclick = function () {
+        filtered = nft10k
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+        this.style.display = "none"
+        document.getElementById("filterTrait").style.display = "none"
+        document.getElementById("filterLayer").value = ""
+      }
+
+      document.getElementById("generate10k").addEventListener("click", () => {
+        nft10k = Array.from({ length: 10000 }, getRandomTraits)
+        filtered = nft10k
+        currentPage = 0
+        document.getElementById("controls").style.display = ""
+        renderPage(filtered, 0)
+        updatePaging(filtered.length, 0)
+      })
+    </script>
+  </body>
+</html> -->

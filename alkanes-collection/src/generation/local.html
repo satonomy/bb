@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Bulk NFT Random Previewer</title>
+    <title>Bulk NFT 10k Generator (Color Quota)</title>
+
     <style>
       body {
         font-family: monospace;
@@ -19,92 +20,48 @@
         border: none;
         cursor: pointer;
       }
-      label {
-        font-weight: bold;
+      #itemsOutput {
+        background: #222;
+        max-height: 400px;
+        overflow: auto;
+        padding: 16px;
+        border-radius: 8px;
       }
-      #bulkResult {
-        margin: 1.5rem 0;
+      #analytics {
         background: #222;
         border-radius: 12px;
-        padding: 12px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-      }
-      canvas {
-        border-radius: 8px;
-        background: #000;
-        margin: 6px 6px 18px 0;
-      }
-      .input-row {
-        margin-bottom: 10px;
-      }
-      select,
-      input[type="number"] {
-        background: #222;
+        padding: 16px;
+        margin: 2rem 0;
         color: #fff;
-        border-radius: 6px;
-        border: 1px solid #333;
-        padding: 3px 8px;
-        margin-right: 10px;
+        font-size: 14px;
+        line-height: 1.6;
       }
-      .trait-label {
-        color: #888;
-        font-size: 12px;
-        margin-top: 2px;
+      #analytics table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      #analytics th,
+      #analytics td {
+        padding: 4px 8px;
+        border-bottom: 1px solid #333;
+        text-align: left;
+      }
+      #analytics th {
+        color: #eee;
+      }
+      #analytics td {
+        color: #ccc;
       }
     </style>
   </head>
   <body>
-    <h2>Bulk NFT Random Previewer</h2>
-    <div class="input-row">
-      <label
-        >Rarity:
-        <select id="raritySel">
-          <option value="gray">Gray (6000)</option>
-          <option value="red">Red (1000)</option>
-          <option value="blue">Blue (1000, no hand/hat)</option>
-          <option value="green">Green (1000)</option>
-          <option value="golden">Golden (216)</option>
-          <option value="mixed">Mixed (744)</option>
-          <option value="oneof">1/1 (40)</option>
-        </select>
-      </label>
-      <label
-        >How many?
-        <input
-          type="number"
-          id="amount"
-          value="12"
-          min="1"
-          max="216"
-          style="width: 60px"
-      /></label>
-      <label
-        >BG:
-        <select id="bgMode">
-          <option value="byColor">By Color</option>
-          <option value="random">Random</option>
-          <option value="blue">Blue</option>
-          <option value="cyan">Cyan</option>
-          <option value="green">Green</option>
-          <option value="purple">Purple</option>
-          <option value="red">Red</option>
-        </select>
-      </label>
-      <button id="bulkRender">Render Random NFTs</button>
-    </div>
-    <div id="bulkResult"></div>
+    <h2>Generate 10,000 NFT Items by Color Quota</h2>
 
+    <button id="generateItems">Generate 10,000 Items & Export JSON</button>
+    <pre id="itemsOutput"></pre>
+    <div id="analytics"></div>
     <script type="module">
-      // --- TRAIT DATA ---
-      const GRAY_HEAD_SPECIALS = [
-        "Seed Unit",
-        "Brain Unit",
-        "Energy Unit",
-        "Organic Unit",
-      ]
-
       const traitFiles = {
         Hand: {
           green: [
@@ -253,7 +210,10 @@
             "Processing Unit 06",
             "Processing Unit 10",
             "Sunglasses",
-            ...GRAY_HEAD_SPECIALS,
+            "Seed Unit",
+            "Brain Unit",
+            "Energy Unit",
+            "Organic Unit",
           ],
           gray: [
             "Brain Unit",
@@ -288,7 +248,10 @@
             "Processing Unit 04",
             "Processing Unit 05",
             "Sunglasses",
-            ...GRAY_HEAD_SPECIALS,
+            "Seed Unit",
+            "Brain Unit",
+            "Energy Unit",
+            "Organic Unit",
           ],
           golden: [
             "Golden Neuron",
@@ -309,34 +272,21 @@
             "Processing Unit 04",
             "Processing Unit 11",
             "Sunglasses",
-            ...GRAY_HEAD_SPECIALS,
+            "Seed Unit",
+            "Brain Unit",
+            "Energy Unit",
+            "Organic Unit",
           ],
         },
       }
       const colorList = ["gray", "red", "blue", "green", "golden"]
-      const BG_PATHS = {
-        blue: "traits/background/Blue.png",
-        cyan: "traits/background/Cyan.png",
-        green: "traits/background/Green.png",
-        purple: "traits/background/Purple.png",
-        red: "traits/background/Red.png",
-        stars: "traits/background/Stars.png",
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)]
       }
-      const BG_KEYS = Object.keys(BG_PATHS)
-      const LAYER_ORDER_OPTIONAL = [
-        { key: "Back", folder: "Back" },
-        { key: "Body", folder: "Body", colorKey: "BodyColor" },
-        { key: "Head", folder: "Head", colorKey: "HeadColor" },
-      ]
-      const CANVAS_SIZE = 155
-      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
-      function maybeOptional(valArr) {
-        // 50% chance to include the trait, else null
-        return Math.random() < 0.5 ? null : pick(valArr)
+      function maybeOptional(arr) {
+        return arr.length && Math.random() < 0.5 ? pick(arr) : null
       }
-
       function getTraitsForRarity(rarity, idx) {
-        // GOLDEN
         if (rarity === "golden") {
           let traits = {
             rarity: "golden",
@@ -358,9 +308,8 @@
           }
           return traits
         }
-        // BLUE: never hand/hat
         if (rarity === "blue") {
-          let traits = {
+          return {
             rarity: "blue",
             Back: pick(traitFiles.Back),
             Body: pick(traitFiles.Body.blue),
@@ -371,11 +320,9 @@
             HandColor: null,
             Hat: null,
           }
-          return traits
         }
-        // NORMAL COLORS: hand/hat optional
         if (["gray", "red", "green"].includes(rarity)) {
-          let traits = {
+          return {
             rarity,
             Back: pick(traitFiles.Back),
             Body: pick(traitFiles.Body[rarity]),
@@ -386,13 +333,11 @@
             HandColor: rarity,
             Hat: maybeOptional(traitFiles.Hat),
           }
-          return traits
         }
-        // MIXED (random color per part, hand/hat optional)
         if (rarity === "mixed") {
           let bColor = pick(colorList),
             hColor = pick(colorList)
-          let traits = {
+          return {
             rarity: "mixed",
             Back: pick(traitFiles.Back),
             Body: pick(traitFiles.Body[bColor]),
@@ -403,12 +348,10 @@
             HandColor: bColor,
             Hat: maybeOptional(traitFiles.Hat),
           }
-          return traits
         }
-        // 1/1 (random color, hand/hat optional)
         if (rarity === "oneof") {
           let c = pick(colorList)
-          let traits = {
+          return {
             rarity: "oneof",
             Back: pick(traitFiles.Back),
             Body: pick(traitFiles.Body[c]),
@@ -419,9 +362,7 @@
             HandColor: c,
             Hat: maybeOptional(traitFiles.Hat),
           }
-          return traits
         }
-        // fallback gray
         return {
           rarity: "gray",
           Back: pick(traitFiles.Back),
@@ -434,33 +375,109 @@
           Hat: maybeOptional(traitFiles.Hat),
         }
       }
-
-      function resolveImagePath(traits, layer) {
-        const grayHeadSpecials = [
-          "Seed Unit",
-          "Brain Unit",
-          "Energy Unit",
-          "Organic Unit",
+      function encodeTraits(traits) {
+        // You can implement encoding if you want. Example:
+        return traits
+      }
+      function getFullTraitsListFor10k() {
+        let rarities = [
+          ...Array(6000).fill("gray"),
+          ...Array(1000).fill("red"),
+          ...Array(1000).fill("blue"),
+          ...Array(1000).fill("green"),
+          ...Array(216).fill("golden"),
+          ...Array(744).fill("mixed"),
+          ...Array(40).fill("oneof"),
         ]
-        if (
-          layer.key === "Head" &&
-          traits[layer.key] &&
-          grayHeadSpecials.includes(traits[layer.key])
-        ) {
-          // always use the gray folder for these four heads
-          return `traits/${layer.folder}/gray/${traits[layer.key]}.png`
+        rarities = rarities.sort(() => Math.random() - 0.5)
+        const result = []
+        for (let i = 0; i < 10000; i++) {
+          result.push(getTraitsForRarity(rarities[i], i))
         }
-        if (layer.colorKey && traits[layer.colorKey] && traits[layer.key]) {
-          return `traits/${layer.folder}/${traits[layer.colorKey]}/${
-            traits[layer.key]
-          }.png`
-        } else if (traits[layer.key]) {
-          return `traits/${layer.folder}/${traits[layer.key]}.png`
+        return result
+      }
+      function getAnalytics(traitsList) {
+        const rarityCount = {},
+          colorCount = {},
+          traitCounts = {}
+        for (const t of traitsList) {
+          rarityCount[t.rarity] = (rarityCount[t.rarity] || 0) + 1
+          colorCount[t.BodyColor] = (colorCount[t.BodyColor] || 0) + 1
+          for (const k of ["Back", "Body", "Head", "Hand", "Hat"]) {
+            if (!traitCounts[k]) traitCounts[k] = {}
+            if (t[k]) traitCounts[k][t[k]] = (traitCounts[k][t[k]] || 0) + 1
+          }
         }
-        return null
+        return { rarityCount, colorCount, traitCounts }
+      }
+      function renderAnalytics(analytics) {
+        const { rarityCount, colorCount, traitCounts } = analytics
+        let html = `<h3>Analytics of 10,000 NFTs</h3>`
+        html +=
+          "<strong>Rarity Distribution:</strong><br/><table><tr><th>Rarity</th><th>Count</th></tr>"
+        for (const [rarity, count] of Object.entries(rarityCount)) {
+          html += `<tr><td>${rarity}</td><td>${count}</td></tr>`
+        }
+        html += "</table>"
+        html +=
+          "<br/><strong>BodyColor Distribution:</strong><br/><table><tr><th>Color</th><th>Count</th></tr>"
+        for (const [color, count] of Object.entries(colorCount)) {
+          html += `<tr><td>${color}</td><td>${count}</td></tr>`
+        }
+        html += "</table>"
+        html += "<br/><strong>Trait Counts (first 12 of each):</strong><br/>"
+        for (const [trait, obj] of Object.entries(traitCounts)) {
+          html += `<details><summary>${trait}</summary><table><tr><th>Value</th><th>Count</th></tr>`
+          Object.entries(obj)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 12)
+            .forEach(([val, count]) => {
+              html += `<tr><td>${val}</td><td>${count}</td></tr>`
+            })
+          html += "</table></details>"
+        }
+        return html
+      }
+      document.getElementById("generateItems").onclick = () => {
+        const traitsList = getFullTraitsListFor10k()
+        const items = traitsList.map(encodeTraits)
+        document.getElementById("itemsOutput").textContent = JSON.stringify(
+          items,
+          null,
+          2
+        )
+        const blob = new Blob([JSON.stringify(items)], {
+          type: "application/json",
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "items-10k.json"
+        a.innerText = "Download items-10k.json"
+        document
+          .getElementById("itemsOutput")
+          .appendChild(document.createElement("br"))
+        document.getElementById("itemsOutput").appendChild(a)
+        // Analytics
+        const analytics = getAnalytics(traitsList)
+        document.getElementById("analytics").innerHTML =
+          renderAnalytics(analytics)
       }
 
-      async function loadImageSafe(path) {
+      const LAYER_ORDER = [
+        { key: "Back", folder: "Back" },
+        { key: "Body", folder: "Body" },
+        { key: "Head", folder: "Head" },
+        { key: "Hat", folder: "Hat" },
+        { key: "Hand", folder: "Hand" },
+      ]
+
+      function traitPath(traits, layer) {
+        if (!traits[layer.key]) return null
+        return `./traits/${layer.folder}/${traits[layer.key]}.png`
+      }
+
+      function loadImageSafe(path) {
         return new Promise((resolve) => {
           const img = new window.Image()
           img.onload = () => resolve(img)
@@ -469,91 +486,54 @@
         })
       }
 
-      function getDominantColor(traits) {
-        if (traits.BodyColor && BG_KEYS.includes(traits.BodyColor))
-          return traits.BodyColor
-        if (traits.HeadColor && BG_KEYS.includes(traits.HeadColor))
-          return traits.HeadColor
-        if (traits.HandColor && BG_KEYS.includes(traits.HandColor))
-          return traits.HandColor
-        return "blue"
-      }
-
-      async function renderNft(traits, bgMode) {
+      async function renderNFT(traits) {
         const canvas = document.createElement("canvas")
-        canvas.width = CANVAS_SIZE
-        canvas.height = CANVAS_SIZE
+        canvas.width = 120
+        canvas.height = 120
         const ctx = canvas.getContext("2d")
-        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
-        let bgKey
-        if (bgMode === "byColor") {
-          bgKey = getDominantColor(traits)
-        } else if (bgMode === "random") {
-          bgKey = BG_KEYS[Math.floor(Math.random() * BG_KEYS.length)]
-        } else {
-          bgKey = bgMode
-        }
-        const bgPath = BG_PATHS[bgKey]
-        const bgImg = await loadImageSafe(bgPath)
-        if (bgImg) ctx.drawImage(bgImg, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
-        // Always: Back, Body, Head
-        for (const layer of LAYER_ORDER_OPTIONAL) {
-          const imgPath = resolveImagePath(traits, layer)
-          if (imgPath) {
-            const img = await loadImageSafe(imgPath)
-            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
-          }
-        }
-        // Optionally: Hand, Hat
-        if (traits.Hat) {
-          const hatPath = resolveImagePath(traits, {
-            key: "Hat",
-            folder: "Hat",
-          })
-          if (hatPath) {
-            const img = await loadImageSafe(hatPath)
-            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
-          }
-        }
-        if (traits.Hand) {
-          const handPath = resolveImagePath(traits, {
-            key: "Hand",
-            folder: "Hand",
-            colorKey: "HandColor",
-          })
-          if (handPath) {
-            const img = await loadImageSafe(handPath)
-            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+        ctx.clearRect(0, 0, 120, 120)
+        ctx.fillStyle = "#18181b"
+        ctx.fillRect(0, 0, 120, 120)
+        for (const layer of LAYER_ORDER) {
+          const path = traitPath(traits, layer)
+          if (path) {
+            const img = await loadImageSafe(path)
+            if (img) ctx.drawImage(img, 0, 0, 120, 120)
           }
         }
         return canvas
       }
 
-      document.getElementById("bulkRender").onclick = async () => {
-        const resultDiv = document.getElementById("bulkResult")
-        resultDiv.innerHTML = ""
-        const rarity = document.getElementById("raritySel").value
-        let amount = Math.max(
-          1,
-          Math.min(216, Number(document.getElementById("amount").value) || 1)
-        )
-        const bgMode = document.getElementById("bgMode").value
-        for (let i = 0; i < amount; i++) {
-          const traits = getTraitsForRarity(rarity, i)
-          const canvas = await renderNft(traits, bgMode)
-          const div = document.createElement("div")
-          div.style.display = "flex"
-          div.style.flexDirection = "column"
-          div.style.alignItems = "center"
-          div.innerHTML = `<span style="color:#aaa;font-size:12px;">#${
-            i + 1
-          }</span>
-          <span class="trait-label">${traits.rarity}${
-            traits.Hand ? " | Hand" : ""
-          }${traits.Hat ? " | Hat" : ""}</span>`
-          div.appendChild(canvas)
-          resultDiv.appendChild(div)
+      function previewMany(traitsList) {
+        let area = document.getElementById("previewArea")
+        if (!area) {
+          area = document.createElement("div")
+          area.id = "previewArea"
+          document.body.appendChild(area)
         }
+        area.innerHTML = ""
+        ;(async () => {
+          for (let i = 0; i < traitsList.length; ++i) {
+            const wrap = document.createElement("div")
+            wrap.className = "nft-preview"
+            const canvas = await renderNFT(traitsList[i])
+            wrap.appendChild(canvas)
+            wrap.innerHTML += `<span>#${i + 1}</span>`
+            area.appendChild(wrap)
+          }
+        })()
+      }
+
+      const previewBtn = document.createElement("button")
+      previewBtn.id = "preview20"
+      previewBtn.innerText = "Preview 20 NFTs"
+      document.body.insertBefore(previewBtn, document.body.children[1])
+
+      document.getElementById("preview20").onclick = () => {
+        const traitsList = []
+        for (let i = 0; i < 20; ++i)
+          traitsList.push(getTraitsForRarity("gray", i))
+        previewMany(traitsList)
       }
     </script>
   </body>
