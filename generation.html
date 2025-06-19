@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>NFT Collection Generator — Fixed Rarity</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 2rem;
+        background: #18181b;
+        color: #fff;
+      }
+      button {
+        margin: 1rem 0;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        background: #262626;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      label {
+        font-weight: bold;
+      }
+      .analytics {
+        margin-top: 2rem;
+        padding: 1rem;
+        background: #222;
+        border-radius: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+        background: #19191b;
+      }
+      th,
+      td {
+        border: 1px solid #444;
+        padding: 6px 10px;
+        text-align: left;
+      }
+      th {
+        background: #262626;
+      }
+      small {
+        color: #aaa;
+      }
+      .scroll-x {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .scroll-y {
+        max-height: 60px;
+        overflow-y: auto;
+      }
+      pre {
+        width: 100%;
+        height: 320px;
+        background: #222;
+        color: #fff;
+        border-radius: 8px;
+        padding: 8px;
+        overflow: auto;
+      }
+      .color-badge {
+        display: inline-block;
+        padding: 2px 7px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin: 0 3px;
+      }
+      .green {
+        background: #15803d;
+        color: #fff;
+      }
+      .gray {
+        background: #6b7280;
+        color: #fff;
+      }
+      .golden {
+        background: #f59e42;
+        color: #fff;
+      }
+      .blue {
+        background: #2563eb;
+        color: #fff;
+      }
+      .red {
+        background: #b91c1c;
+        color: #fff;
+      }
+      .mixed {
+        background: #6667ab;
+        color: #fff;
+      }
+      .oneof {
+        background: #b45309;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>NFT Collection Generator — Fixed Rarity</h2>
+    <div class="analytics" id="analytics"></div>
+    <button id="generate">Generate 10,000 Collection</button>
+    <label>Output JSON (with items):</label>
+    <pre id="output"></pre>
+    <script type="module">
+      // All trait options by color
+      const traitFiles = {
+        Hand: {
+          green: [
+            "Racket",
+            "Coffe Mug",
+            "Green Lightsaber",
+            "Walkie-talkie",
+            "Beer Mug",
+            "Rail Gun",
+            "Elder Staff",
+            "Burger & Fork",
+            "Magic Wand",
+          ],
+          gray: [
+            "Racket",
+            "Flash Drive",
+            "Coffe Mug",
+            "Butcher Knife",
+            "Alien Gun",
+            "Green Lightsaber",
+            "Walkie-talkie",
+            "Alien Sword",
+            "Beer Mug",
+            "Rail Gun",
+            "Elder Staff",
+            "Red Lightsaber",
+            "Burger & Fork",
+            "Magic Wand",
+          ],
+          golden: ["Golden Rail Gun", "Golden Lightsaber"],
+          red: [
+            "Coffe Mug",
+            "Walkie-talkie",
+            "Alien Sword",
+            "Elder Staff",
+            "Red Lightsaber",
+            "Magic Wand",
+          ],
+          blue: [], // not present
+        },
+        Back: [
+          "Fairy Wings",
+          "Backpack",
+          "Imp Wings",
+          "Drone 01",
+          "Drone 03",
+          "Drone 02",
+          "Jetpack",
+          "Golden Wings",
+          "Golden Jetpack",
+          "Angel Wings",
+        ],
+        Body: {
+          green: [
+            "Butcher Apron",
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+          ],
+          gray: [
+            "Hooded Sweatshirt",
+            "Lab Coat",
+            "Suit",
+            "Leather Jacket",
+            "Skull Shirt",
+            "Butcher Apron",
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 07",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+            "Striped Shirt",
+            "Blazer",
+          ],
+          blue: [
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 07",
+            "Mainframe 09",
+            "Mainframe 08",
+          ],
+          golden: ["Golden Frame", "Golden Chassis", "Golden Hull"],
+          red: [
+            "Lab Coat",
+            "Skull Shirt",
+            "Butcher Apron",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+          ],
+        },
+        Head: {
+          green: [
+            "Party Glasses",
+            "Processing Unit 09",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Sunglasses",
+          ],
+          gray: [
+            "Brain Unit",
+            "Organic Unit",
+            "Party Glasses",
+            "Processing Unit 08",
+            "Processing Unit 09",
+            "Seed Unit",
+            "Processing Unit 01",
+            "Processing Unit 14",
+            "Processing Unit 02",
+            "Processing Unit 03",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 05",
+            "Processing Unit 11",
+            "Sunglasses",
+            "Energy Unit",
+          ],
+          blue: [
+            "Party Glasses",
+            "Processing Unit 01",
+            "Processing Unit 03",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 05",
+            "Sunglasses",
+          ],
+          golden: [
+            "Golden Neuron",
+            "Golden Cortex",
+            "Golden Analyzer",
+            "Golden Synapse",
+          ],
+          red: [
+            "Party Glasses",
+            "Processing Unit 08",
+            "Processing Unit 09",
+            "Processing Unit 14",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 11",
+            "Sunglasses",
+          ],
+        },
+        Hat: [
+          "Egg Basket",
+          "Trainer Cap",
+          "Baseball Cap",
+          "Propeller Hat",
+          "Golden Halo",
+          "Signal Antenna",
+          "Golden Egg Basket",
+          "Beanie",
+          "Bird Hat",
+          "Gentleman Hat",
+          "Cooking Hat",
+          "Adventurer Hat",
+          "Farmer Hat",
+          "Mushroom Hat",
+          "Magic Hat",
+          "Mining Hat",
+          "Radio Antenna",
+          "Plumber Hat",
+          "Magician Hat",
+          "Royal Crown",
+          "Pirate Hat",
+          "Angel Halo",
+          "Cowboy Hat",
+          "Mice Hat",
+          "Imperial Crown",
+        ],
+      }
+      // Color options
+      const colorList = ["gray", "red", "blue", "green", "golden"]
+
+      // For random in array
+      function pick(arr) {
+        return arr[Math.floor(Math.random() * arr.length)]
+      }
+
+      // Generate a trait object
+      function makeTraits(color, allowMixed = false) {
+        let traits = {}
+        if (!allowMixed) {
+          for (let t of ["Hand", "Body", "Head"]) {
+            let arr = traitFiles[t][color] || []
+            traits[t] = arr.length ? pick(arr) : null
+          }
+        } else {
+          for (let t of ["Hand", "Body", "Head"]) {
+            // Random color for each part for mixed
+            let cc = pick(
+              colorList.filter((c) => (traitFiles[t][c] || []).length)
+            )
+            let arr = traitFiles[t][cc] || []
+            traits[t] = arr.length ? pick(arr) : null
+            traits[t + "Color"] = cc
+          }
+        }
+        traits["Back"] = pick(traitFiles.Back)
+        traits["Hat"] = pick(traitFiles.Hat)
+        if (!allowMixed) {
+          traits["HandColor"] = color
+          traits["BodyColor"] = color
+          traits["HeadColor"] = color
+        }
+        return traits
+      }
+
+      // Output analytics
+      function showAnalytics() {
+        document.getElementById("analytics").innerHTML = `
+        <table>
+          <tr><th>Type</th><th>Amount</th><th>Note</th></tr>
+          <tr><td><span class="color-badge gray">Gray</span></td><td>6000</td><td>Full set all gray</td></tr>
+          <tr><td><span class="color-badge red">Red</span></td><td>1000</td><td>Full set all red</td></tr>
+          <tr><td><span class="color-badge blue">Blue</span></td><td>1000</td><td>Full set all blue</td></tr>
+          <tr><td><span class="color-badge green">Green</span></td><td>1000</td><td>Full set all green</td></tr>
+          <tr><td><span class="color-badge golden">Golden</span></td><td>216</td><td>Full set all golden</td></tr>
+          <tr><td><span class="color-badge mixed">Mixed</span></td><td>744</td><td>Mix any colors</td></tr>
+          <tr><td><span class="color-badge oneof">1/1</span></td><td>40</td><td>Special 1/1 (just random)</td></tr>
+        </table>
+        <div style="margin-top:16px">
+          Each NFT will have the structure: {Hand, Body, Head, HandColor, BodyColor, HeadColor, Back, Hat}
+        </div>
+        `
+      }
+
+      // Encode (use up to 32 bits, not negative)
+      function encodeTraits(traits, indices, format) {
+        let value = 0
+        for (const trait in format) {
+          const { shift, mask } = format[trait]
+          let arr = indices[trait]
+          let idx = arr ? arr.indexOf(traits[trait]) : 0
+          if (idx < 0) idx = 0
+          value |= (idx & mask) << shift
+        }
+        return value >>> 0
+      }
+
+      // Build indices for output JSON
+      function buildIndices() {
+        let out = {}
+        for (let part of ["Hand", "Body", "Head"]) {
+          out[part] = []
+          for (let color of colorList) {
+            ;(traitFiles[part][color] || []).forEach((v) => {
+              if (!out[part].includes(v)) out[part].push(v)
+            })
+          }
+        }
+        out.Back = traitFiles.Back
+        out.Hat = traitFiles.Hat
+        out.HandColor = colorList
+        out.BodyColor = colorList
+        out.HeadColor = colorList
+        return out
+      }
+
+      // Auto bit format
+      function buildFormat(indices) {
+        let bitsUsed = 0,
+          format = {}
+        for (const t in indices) {
+          let len = Math.max(1, indices[t].length)
+          let bits = Math.ceil(Math.log2(len))
+          format[t] = { shift: bitsUsed, mask: (1 << bits) - 1, bits }
+          bitsUsed += bits
+        }
+        return format
+      }
+
+      document.getElementById("generate").onclick = () => {
+        // Order and quantity
+        const collection = []
+        // 6000 gray
+        for (let i = 0; i < 6000; i++)
+          collection.push({ ...makeTraits("gray"), rarity: "gray" })
+        // 1000 red
+        for (let i = 0; i < 1000; i++)
+          collection.push({ ...makeTraits("red"), rarity: "red" })
+        // 1000 blue
+        for (let i = 0; i < 1000; i++)
+          collection.push({ ...makeTraits("blue"), rarity: "blue" })
+        // 1000 green
+        for (let i = 0; i < 1000; i++)
+          collection.push({ ...makeTraits("green"), rarity: "green" })
+        // 216 golden
+        for (let i = 0; i < 216; i++)
+          collection.push({ ...makeTraits("golden"), rarity: "golden" })
+        // 744 mixed (let each part get random color)
+        for (let i = 0; i < 744; i++)
+          collection.push({ ...makeTraits(null, true), rarity: "mixed" })
+        // 40 1/1 (just random from any)
+        for (let i = 0; i < 40; i++)
+          collection.push({
+            ...makeTraits(pick(colorList), false),
+            rarity: "1of1",
+          })
+
+        // output for contract compatibility: encoded items (optional)
+        const indices = buildIndices()
+        const format = buildFormat(indices)
+        const items = collection.map((traits) =>
+          encodeTraits(traits, indices, format)
+        )
+        const out = { format, indices, items, collection }
+        document.getElementById("output").textContent = JSON.stringify(
+          out,
+          null,
+          2
+        )
+      }
+
+      showAnalytics()
+    </script>
+  </body>
+</html>

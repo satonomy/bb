@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bulk NFT Random Previewer</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 2rem;
+        background: #18181b;
+        color: #fff;
+      }
+      button {
+        margin: 1rem 0;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        background: #262626;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      label {
+        font-weight: bold;
+      }
+      #bulkResult {
+        margin: 1.5rem 0;
+        background: #222;
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+      canvas {
+        border-radius: 8px;
+        background: #000;
+        margin: 6px 6px 18px 0;
+      }
+      .input-row {
+        margin-bottom: 10px;
+      }
+      select,
+      input[type="number"] {
+        background: #222;
+        color: #fff;
+        border-radius: 6px;
+        border: 1px solid #333;
+        padding: 3px 8px;
+        margin-right: 10px;
+      }
+      .trait-label {
+        color: #888;
+        font-size: 12px;
+        margin-top: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Bulk NFT Random Previewer</h2>
+    <div class="input-row">
+      <label
+        >Rarity:
+        <select id="raritySel">
+          <option value="gray">Gray (6000)</option>
+          <option value="red">Red (1000)</option>
+          <option value="blue">Blue (1000, no hand/hat)</option>
+          <option value="green">Green (1000)</option>
+          <option value="golden">Golden (216)</option>
+          <option value="mixed">Mixed (744)</option>
+          <option value="oneof">1/1 (40)</option>
+        </select>
+      </label>
+      <label
+        >How many?
+        <input
+          type="number"
+          id="amount"
+          value="12"
+          min="1"
+          max="216"
+          style="width: 60px"
+      /></label>
+      <label
+        >BG:
+        <select id="bgMode">
+          <option value="byColor">By Color</option>
+          <option value="random">Random</option>
+          <option value="blue">Blue</option>
+          <option value="cyan">Cyan</option>
+          <option value="green">Green</option>
+          <option value="purple">Purple</option>
+          <option value="red">Red</option>
+        </select>
+      </label>
+      <button id="bulkRender">Render Random NFTs</button>
+    </div>
+    <div id="bulkResult"></div>
+
+    <script type="module">
+      // --- TRAIT DATA ---
+      const GRAY_HEAD_SPECIALS = [
+        "Seed Unit",
+        "Brain Unit",
+        "Energy Unit",
+        "Organic Unit",
+      ]
+
+      const traitFiles = {
+        Hand: {
+          green: [
+            "Racket",
+            "Coffe Mug",
+            "Green Lightsaber",
+            "Walkie-talkie",
+            "Beer Mug",
+            "Rail Gun",
+            "Elder Staff",
+            "Burger & Fork",
+            "Magic Wand",
+          ],
+          gray: [
+            "Racket",
+            "Flash Drive",
+            "Coffe Mug",
+            "Butcher Knife",
+            "Alien Gun",
+            "Green Lightsaber",
+            "Walkie-talkie",
+            "Alien Sword",
+            "Beer Mug",
+            "Rail Gun",
+            "Elder Staff",
+            "Red Lightsaber",
+            "Burger & Fork",
+            "Magic Wand",
+          ],
+          golden: ["Golden Rail Gun", "Golden Lightsaber"],
+          red: [
+            "Coffe Mug",
+            "Walkie-talkie",
+            "Alien Sword",
+            "Elder Staff",
+            "Red Lightsaber",
+            "Magic Wand",
+          ],
+          blue: [],
+        },
+        Hat: [
+          "Egg Basket",
+          "Trainer Cap",
+          "Baseball Cap",
+          "Propeller Hat",
+          "Golden Halo",
+          "Signal Antenna",
+          "Golden Egg Basket",
+          "Beanie",
+          "Bird Hat",
+          "Gentleman Hat",
+          "Cooking Hat",
+          "Adventurer Hat",
+          "Farmer Hat",
+          "Mushroom Hat",
+          "Magic Hat",
+          "Mining Hat",
+          "Radio Antenna",
+          "Plumber Hat",
+          "Magician Hat",
+          "Royal Crown",
+          "Pirate Hat",
+          "Angel Halo",
+          "Cowboy Hat",
+          "Mice Hat",
+          "Imperial Crown",
+        ],
+        Back: [
+          "Fairy Wings",
+          "Backpack",
+          "Imp Wings",
+          "Drone 01",
+          "Drone 03",
+          "Drone 02",
+          "Jetpack",
+          "Golden Wings",
+          "Golden Jetpack",
+          "Angel Wings",
+        ],
+        Body: {
+          green: [
+            "Butcher Apron",
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+          ],
+          gray: [
+            "Hooded Sweatshirt",
+            "Lab Coat",
+            "Suit",
+            "Leather Jacket",
+            "Skull Shirt",
+            "Butcher Apron",
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 07",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+            "Striped Shirt",
+            "Blazer",
+          ],
+          blue: [
+            "Mainframe 03",
+            "Mainframe 02",
+            "Mainframe 01",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 07",
+            "Mainframe 09",
+            "Mainframe 08",
+          ],
+          golden: ["Golden Frame", "Golden Chassis", "Golden Hull"],
+          red: [
+            "Lab Coat",
+            "Skull Shirt",
+            "Butcher Apron",
+            "Mainframe 05",
+            "Mainframe 10",
+            "Mainframe 04",
+            "Mainframe 06",
+            "Mainframe 09",
+            "Mainframe 08",
+            "Plumber Overalls",
+          ],
+        },
+        Head: {
+          green: [
+            "Party Glasses",
+            "Processing Unit 09",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Sunglasses",
+            ...GRAY_HEAD_SPECIALS,
+          ],
+          gray: [
+            "Brain Unit",
+            "Organic Unit",
+            "Party Glasses",
+            "Processing Unit 08",
+            "Processing Unit 09",
+            "Seed Unit",
+            "Processing Unit 01",
+            "Processing Unit 14",
+            "Processing Unit 02",
+            "Processing Unit 03",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 05",
+            "Processing Unit 11",
+            "Sunglasses",
+            "Energy Unit",
+          ],
+          blue: [
+            "Party Glasses",
+            "Processing Unit 01",
+            "Processing Unit 03",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 05",
+            "Sunglasses",
+            ...GRAY_HEAD_SPECIALS,
+          ],
+          golden: [
+            "Golden Neuron",
+            "Golden Cortex",
+            "Golden Analyzer",
+            "Golden Synapse",
+          ],
+          red: [
+            "Party Glasses",
+            "Processing Unit 08",
+            "Processing Unit 09",
+            "Processing Unit 14",
+            "Processing Unit 07",
+            "Processing Unit 13",
+            "Processing Unit 12",
+            "Processing Unit 06",
+            "Processing Unit 10",
+            "Processing Unit 04",
+            "Processing Unit 11",
+            "Sunglasses",
+            ...GRAY_HEAD_SPECIALS,
+          ],
+        },
+      }
+      const colorList = ["gray", "red", "blue", "green", "golden"]
+      const BG_PATHS = {
+        blue: "traits/background/Blue.png",
+        cyan: "traits/background/Cyan.png",
+        green: "traits/background/Green.png",
+        purple: "traits/background/Purple.png",
+        red: "traits/background/Red.png",
+        stars: "traits/background/Stars.png",
+      }
+      const BG_KEYS = Object.keys(BG_PATHS)
+      const LAYER_ORDER_OPTIONAL = [
+        { key: "Back", folder: "Back" },
+        { key: "Body", folder: "Body", colorKey: "BodyColor" },
+        { key: "Head", folder: "Head", colorKey: "HeadColor" },
+      ]
+      const CANVAS_SIZE = 155
+      const pick = (arr) => arr[Math.floor(Math.random() * arr.length)]
+      function maybeOptional(valArr) {
+        // 50% chance to include the trait, else null
+        return Math.random() < 0.5 ? null : pick(valArr)
+      }
+
+      function getTraitsForRarity(rarity, idx) {
+        // GOLDEN
+        if (rarity === "golden") {
+          let traits = {
+            rarity: "golden",
+            Back: pick(traitFiles.Back),
+            Body: pick(traitFiles.Body.golden),
+            Head: pick(traitFiles.Head.golden),
+            BodyColor: "golden",
+            HeadColor: "golden",
+            Hand: null,
+            HandColor: null,
+            Hat: null,
+          }
+          if (idx === 0 || idx === 1) {
+            traits.Hand = traitFiles.Hand.golden[idx]
+            traits.HandColor = "golden"
+          }
+          if (idx >= 2 && idx < 27) {
+            traits.Hat = traitFiles.Hat[idx - 2]
+          }
+          return traits
+        }
+        // BLUE: never hand/hat
+        if (rarity === "blue") {
+          let traits = {
+            rarity: "blue",
+            Back: pick(traitFiles.Back),
+            Body: pick(traitFiles.Body.blue),
+            BodyColor: "blue",
+            Head: pick(traitFiles.Head.blue),
+            HeadColor: "blue",
+            Hand: null,
+            HandColor: null,
+            Hat: null,
+          }
+          return traits
+        }
+        // NORMAL COLORS: hand/hat optional
+        if (["gray", "red", "green"].includes(rarity)) {
+          let traits = {
+            rarity,
+            Back: pick(traitFiles.Back),
+            Body: pick(traitFiles.Body[rarity]),
+            BodyColor: rarity,
+            Head: pick(traitFiles.Head[rarity]),
+            HeadColor: rarity,
+            Hand: maybeOptional(traitFiles.Hand[rarity]),
+            HandColor: rarity,
+            Hat: maybeOptional(traitFiles.Hat),
+          }
+          return traits
+        }
+        // MIXED (random color per part, hand/hat optional)
+        if (rarity === "mixed") {
+          let bColor = pick(colorList),
+            hColor = pick(colorList)
+          let traits = {
+            rarity: "mixed",
+            Back: pick(traitFiles.Back),
+            Body: pick(traitFiles.Body[bColor]),
+            BodyColor: bColor,
+            Head: pick(traitFiles.Head[hColor]),
+            HeadColor: hColor,
+            Hand: maybeOptional(traitFiles.Hand[bColor]),
+            HandColor: bColor,
+            Hat: maybeOptional(traitFiles.Hat),
+          }
+          return traits
+        }
+        // 1/1 (random color, hand/hat optional)
+        if (rarity === "oneof") {
+          let c = pick(colorList)
+          let traits = {
+            rarity: "oneof",
+            Back: pick(traitFiles.Back),
+            Body: pick(traitFiles.Body[c]),
+            BodyColor: c,
+            Head: pick(traitFiles.Head[c]),
+            HeadColor: c,
+            Hand: maybeOptional(traitFiles.Hand[c]),
+            HandColor: c,
+            Hat: maybeOptional(traitFiles.Hat),
+          }
+          return traits
+        }
+        // fallback gray
+        return {
+          rarity: "gray",
+          Back: pick(traitFiles.Back),
+          Body: pick(traitFiles.Body.gray),
+          BodyColor: "gray",
+          Head: pick(traitFiles.Head.gray),
+          HeadColor: "gray",
+          Hand: maybeOptional(traitFiles.Hand.gray),
+          HandColor: "gray",
+          Hat: maybeOptional(traitFiles.Hat),
+        }
+      }
+
+      function resolveImagePath(traits, layer) {
+        const grayHeadSpecials = [
+          "Seed Unit",
+          "Brain Unit",
+          "Energy Unit",
+          "Organic Unit",
+        ]
+        if (
+          layer.key === "Head" &&
+          traits[layer.key] &&
+          grayHeadSpecials.includes(traits[layer.key])
+        ) {
+          // always use the gray folder for these four heads
+          return `traits/${layer.folder}/gray/${traits[layer.key]}.png`
+        }
+        if (layer.colorKey && traits[layer.colorKey] && traits[layer.key]) {
+          return `traits/${layer.folder}/${traits[layer.colorKey]}/${
+            traits[layer.key]
+          }.png`
+        } else if (traits[layer.key]) {
+          return `traits/${layer.folder}/${traits[layer.key]}.png`
+        }
+        return null
+      }
+
+      async function loadImageSafe(path) {
+        return new Promise((resolve) => {
+          const img = new window.Image()
+          img.onload = () => resolve(img)
+          img.onerror = () => resolve(null)
+          img.src = path
+        })
+      }
+
+      function getDominantColor(traits) {
+        if (traits.BodyColor && BG_KEYS.includes(traits.BodyColor))
+          return traits.BodyColor
+        if (traits.HeadColor && BG_KEYS.includes(traits.HeadColor))
+          return traits.HeadColor
+        if (traits.HandColor && BG_KEYS.includes(traits.HandColor))
+          return traits.HandColor
+        return "blue"
+      }
+
+      async function renderNft(traits, bgMode) {
+        const canvas = document.createElement("canvas")
+        canvas.width = CANVAS_SIZE
+        canvas.height = CANVAS_SIZE
+        const ctx = canvas.getContext("2d")
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE)
+        let bgKey
+        if (bgMode === "byColor") {
+          bgKey = getDominantColor(traits)
+        } else if (bgMode === "random") {
+          bgKey = BG_KEYS[Math.floor(Math.random() * BG_KEYS.length)]
+        } else {
+          bgKey = bgMode
+        }
+        const bgPath = BG_PATHS[bgKey]
+        const bgImg = await loadImageSafe(bgPath)
+        if (bgImg) ctx.drawImage(bgImg, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+        // Always: Back, Body, Head
+        for (const layer of LAYER_ORDER_OPTIONAL) {
+          const imgPath = resolveImagePath(traits, layer)
+          if (imgPath) {
+            const img = await loadImageSafe(imgPath)
+            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+          }
+        }
+        // Optionally: Hand, Hat
+        if (traits.Hat) {
+          const hatPath = resolveImagePath(traits, {
+            key: "Hat",
+            folder: "Hat",
+          })
+          if (hatPath) {
+            const img = await loadImageSafe(hatPath)
+            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+          }
+        }
+        if (traits.Hand) {
+          const handPath = resolveImagePath(traits, {
+            key: "Hand",
+            folder: "Hand",
+            colorKey: "HandColor",
+          })
+          if (handPath) {
+            const img = await loadImageSafe(handPath)
+            if (img) ctx.drawImage(img, 0, 0, CANVAS_SIZE, CANVAS_SIZE)
+          }
+        }
+        return canvas
+      }
+
+      document.getElementById("bulkRender").onclick = async () => {
+        const resultDiv = document.getElementById("bulkResult")
+        resultDiv.innerHTML = ""
+        const rarity = document.getElementById("raritySel").value
+        let amount = Math.max(
+          1,
+          Math.min(216, Number(document.getElementById("amount").value) || 1)
+        )
+        const bgMode = document.getElementById("bgMode").value
+        for (let i = 0; i < amount; i++) {
+          const traits = getTraitsForRarity(rarity, i)
+          const canvas = await renderNft(traits, bgMode)
+          const div = document.createElement("div")
+          div.style.display = "flex"
+          div.style.flexDirection = "column"
+          div.style.alignItems = "center"
+          div.innerHTML = `<span style="color:#aaa;font-size:12px;">#${
+            i + 1
+          }</span>
+          <span class="trait-label">${traits.rarity}${
+            traits.Hand ? " | Hand" : ""
+          }${traits.Hat ? " | Hat" : ""}</span>`
+          div.appendChild(canvas)
+          resultDiv.appendChild(div)
+        }
+      }
+    </script>
+  </body>
+</html>
