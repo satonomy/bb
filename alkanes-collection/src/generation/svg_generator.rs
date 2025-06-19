@@ -79,7 +79,7 @@ impl SvgGenerator {
     pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
         let (_background, back, body, head, hat, hand) = Self::decode_traits(index)?;
 
-        let mut base_image: RgbaImage = ImageBuffer::new(512, 512);
+        let mut base_image: RgbaImage = ImageBuffer::new(420, 420);
 
         for pixel in base_image.pixels_mut() {
             *pixel = Rgba([0, 0, 0, 0]); // 透明
@@ -96,7 +96,7 @@ impl SvgGenerator {
             return Err(anyhow!("Background data is empty"));
         }
 
-        let bg_image = match ImageBuffer::from_raw(512, 512, bg_bytes) {
+        let bg_image = match ImageBuffer::from_raw(420, 420, bg_bytes) {
             Some(img) => img,
             None => return Err(anyhow!("Failed to create image from raw data")),
         };

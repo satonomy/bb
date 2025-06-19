@@ -585,7 +585,7 @@ impl Collection {
     pub fn get_data(&self, index: u128) -> Result<CallResponse> {
         let context = self.context()?;
         let mut response = CallResponse::forward(&context.incoming_alkanes);
-        let (background, _facility, _body, _clothes, _eyes, _head) = SvgGenerator::decode_traits(index)?;
+        let (background, _back, _body, _head, _hat, _hand) = SvgGenerator::decode_traits(index)?;
 
         let (f, s) = encode_string_to_u128(&background);
         let cellpack = Cellpack {
