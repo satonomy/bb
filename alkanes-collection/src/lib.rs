@@ -35,22 +35,22 @@ const ORBITAL_TEMPLATE_ID: u128 = 111111;
 const ALKANE_BG_ID: AlkaneId = AlkaneId { block: 2, tx: 26177 };
 
 /// Name of the NFT collection
-const CONTRACT_NAME: &str = "Dead Alkanes Club";
+const CONTRACT_NAME: &str = "Satonomy Beep Boop";
 
 /// Symbol of the NFT collection
-const CONTRACT_SYMBOL: &str = "Dead Alkanes Club";
+const CONTRACT_SYMBOL: &str = "Beep Boop";
 
 /// Maximum number of NFTs that can be minted
-const MAX_MINTS: u128 = 1300;
+const MAX_MINTS: u128 = 10000;
 
 /// Maximum number of NFTs that can be purchased in a single transaction during whitelist phase
-const WHITELIST_MAX_PURCHASE_PER_TX: u128 = 1;
+const WHITELIST_MAX_PURCHASE_PER_TX: u128 = 3;
 
 /// Maximum number of NFTs that can be purchased in a single transaction during public phase
-const PUBLIC_MAX_PURCHASE_PER_TX: u128 = 1;
+const PUBLIC_MAX_PURCHASE_PER_TX: u128 = 2;
 
 /// Block height at which whitelist minting begins
-const WHITELIST_MINT_START_BLOCK: u64 = 901520;
+const WHITELIST_MINT_START_BLOCK: u64 = 902632;
 
 /// Block height at which public minting begins
 const PUBLIC_MINT_START_BLOCK: u64 = 901534;
@@ -72,7 +72,7 @@ const MERKLE_ROOT: [u8; 32] = [
 const MERKLE_LEAF_COUNT: u128 = 1053;
 
 /// Price per NFT in payment tokens
-const BTC_MINT_PRICE: u128 = 9000;
+const BTC_MINT_PRICE: u128 = 10000;
 
 /// Collection Contract Structure
 /// This is the main contract structure that implements the NFT collection functionality

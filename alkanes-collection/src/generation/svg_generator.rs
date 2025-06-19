@@ -40,20 +40,20 @@ impl SvgGenerator {
             Ok(code)
         };
         let background_code = get_code("Background")?;
-        let facility_code = get_code("Facility")?;
+        let back_code = get_code("Back")?;
         let body_code = get_code("Body")?;
-        let clothes_code = get_code("Clothes")?;
-        let eyes_code = get_code("Eyes")?;
         let head_code = get_code("Head")?;
+        let hat_code = get_code("hat")?;
+        let hand_code = get_code("Hand")?;
 
         let background = indices["Background"][background_code].as_str().unwrap().to_string();
-        let facility = indices["Facility"][facility_code].as_str().unwrap().to_string();
+        let back = indices["Back"][back_code].as_str().unwrap().to_string();
         let body = indices["Body"][body_code].as_str().unwrap().to_string();
-        let clothes = indices["Clothes"][clothes_code].as_str().unwrap().to_string();
-        let eyes = indices["Eyes"][eyes_code].as_str().unwrap().to_string();
         let head = indices["Head"][head_code].as_str().unwrap().to_string();
+        let hat = indices["Hat"][hat_code].as_str().unwrap().to_string();
+        let hand = indices["Hand"][hand_code].as_str().unwrap().to_string();
 
-        Ok((background, facility, body, clothes, eyes, head))
+        Ok((background, back, body, head, hat, hand))
     }
 
     /// 将十六进制字符串转换为字节数组
@@ -77,7 +77,7 @@ impl SvgGenerator {
     /// # Returns
     /// * `Result<Vec<u8>>` - PNG image data as byte array
     pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
-        let (_background, facility, body, clothes, eyes, head) = Self::decode_traits(index)?;
+        let (_background, back, body, head, hat, hand) = Self::decode_traits(index)?;
 
         let mut base_image: RgbaImage = ImageBuffer::new(512, 512);
 
@@ -104,11 +104,11 @@ impl SvgGenerator {
         imageops::overlay(&mut base_image, &bg_image, 0, 0);
 
         let traits = [
-            ("Facility", &facility),
+            ("Back", &back),
             ("Body", &body),
-            ("Clothes", &clothes),
-            ("Eyes", &eyes),
             ("Head", &head),
+            ("Hat", &hat),
+            ("Hand", &hand),
         ];
 
         for (layer, trait_value) in traits.iter() {
@@ -138,31 +138,31 @@ impl SvgGenerator {
     /// # Returns
     /// * `Result<String>` - JSON string containing NFT attributes
     pub fn get_attributes(index: u128) -> Result<String> {
-        let (background, facility, body, clothes, eyes, head) = Self::decode_traits(index)?;
+        let (background, back, body, head, hat, hand) = Self::decode_traits(index)?;
         let attributes = serde_json::json!([
             {
                 "trait_type": "Background",
                 "value": background
             },
             {
-                "trait_type": "Facility",
-                "value": facility
+                "trait_type": "Back",
+                "value": back
             },
             {
                 "trait_type": "Body",
                 "value": body
             },
             {
-                "trait_type": "Clothes",
-                "value": clothes
-            },
-            {
-                "trait_type": "Eyes",
-                "value": eyes
-            },
-            {
                 "trait_type": "Head",
                 "value": head
+            }
+            {
+                "trait_type": "Hat",
+                "value": hat
+            },
+            {
+                "trait_type": "Hand",
+                "value": hand
             }
         ]);
         Ok(attributes.to_string())
