@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Result};
-use image::{imageops, ImageBuffer, RgbaImage, Rgba, DynamicImage};
+use hex;
+use image::{imageops, DynamicImage, ImageBuffer, Rgba, RgbaImage};
 use include_dir::{include_dir, Dir};
 use serde_json::Value;
-use hex;
 static TRAITS_DIR: Dir = include_dir!("src/generation/traits");
 
 const ENCODED_TRAITS_JSON: &str = include_str!("encoded_traits.json");
@@ -25,8 +25,11 @@ impl SvgGenerator {
         let encoded_traits = Self::get_encoded_traits();
         let format = &encoded_traits["format"];
         let indices = &encoded_traits["indices"];
-        let items = encoded_traits["items"].as_array().ok_or_else(|| anyhow!("Invalid items array"))?;
-        let encoded = items.get(index as usize)
+        let items = encoded_traits["items"]
+            .as_array()
+            .ok_or_else(|| anyhow!("Invalid items array"))?;
+        let encoded = items
+            .get(index as usize)
             .ok_or_else(|| anyhow!("Invalid trait index"))?
             .as_u64()
             .ok_or_else(|| anyhow!("Invalid trait format"))?;
@@ -43,10 +46,13 @@ impl SvgGenerator {
         let back_code = get_code("Back")?;
         let body_code = get_code("Body")?;
         let head_code = get_code("Head")?;
-        let hat_code = get_code("hat")?;
+        let hat_code = get_code("Hat")?;
         let hand_code = get_code("Hand")?;
 
-        let background = indices["Background"][background_code].as_str().unwrap().to_string();
+        let background = indices["Background"][background_code]
+            .as_str()
+            .unwrap()
+            .to_string();
         let back = indices["Back"][back_code].as_str().unwrap().to_string();
         let body = indices["Body"][body_code].as_str().unwrap().to_string();
         let head = indices["Head"][head_code].as_str().unwrap().to_string();
@@ -56,13 +62,12 @@ impl SvgGenerator {
         Ok((background, back, body, head, hat, hand))
     }
 
-    /// 将十六进制字符串转换为字节数组
     fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
         // 移除可能的前缀
         let hex_str = hex_str.trim_start_matches("0x");
         // 移除可能的前导b
         let hex_str = hex_str.trim_start_matches('b');
-        
+
         match hex::decode(hex_str) {
             Ok(bytes) => Ok(bytes),
             Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
@@ -82,7 +87,7 @@ impl SvgGenerator {
         let mut base_image: RgbaImage = ImageBuffer::new(420, 420);
 
         for pixel in base_image.pixels_mut() {
-            *pixel = Rgba([0, 0, 0, 0]); // 透明
+            *pixel = Rgba([0, 0, 0, 0]); // transparent
         }
 
         let bg_bytes = if bg.starts_with(b"0x") || bg.starts_with(b"b") {
@@ -91,7 +96,7 @@ impl SvgGenerator {
         } else {
             bg
         };
-        
+
         if bg_bytes.is_empty() {
             return Err(anyhow!("Background data is empty"));
         }
@@ -100,7 +105,7 @@ impl SvgGenerator {
             Some(img) => img,
             None => return Err(anyhow!("Failed to create image from raw data")),
         };
-        
+
         imageops::overlay(&mut base_image, &bg_image, 0, 0);
 
         let traits = [
@@ -155,7 +160,7 @@ impl SvgGenerator {
             {
                 "trait_type": "Head",
                 "value": head
-            }
+            },
             {
                 "trait_type": "Hat",
                 "value": hat
@@ -167,4 +172,4 @@ impl SvgGenerator {
         ]);
         Ok(attributes.to_string())
     }
-} 
+}
