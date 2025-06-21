@@ -16,10 +16,10 @@ async function renderNFT(traits) {
       i.onerror = () => res(null)
       i.src =
         layer.key === "Background"
-          ? `../../../alkanes-image/src/traits/${
+          ? `../../../../alkanes-image/src/traits/${
               layer.folder
             }/${encodeURIComponent(file)}`
-          : `traits/${layer.folder}/${encodeURIComponent(file)}`
+          : `../traits/${layer.folder}/${encodeURIComponent(file)}`
     })
     if (img) stack.appendChild(img)
   }
