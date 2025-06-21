@@ -1,5 +1,5 @@
 const backChance = 0.85
-const handChance = 0.35
+const handChance = 0.4
 const hatChance = 0.9 // 0.8% chance
 const bgChance = 0.015
 
@@ -31,11 +31,11 @@ function generateNFTs(count) {
     combos.add(
       JSON.stringify({
         Background: bg,
-        Back: null,
-        Body: null,
-        Head: null,
-        Hat: null,
-        Hand: null,
+        Back: "None.png",
+        Body: "None.png",
+        Head: "None.png",
+        Hat: "None.png",
+        Hand: "None.png",
       })
     )
   )
@@ -145,17 +145,10 @@ function generateNFTs(count) {
       usage[o.Hat]++
     }
 
-    // const handWeights = {
-    //   "Butcher Knife.png": 0.1,
-    // }
-
-    // o.Hand = weightedPick(traitFiles.Hand, handWeights)
-    // usage[o.Hand]++
-
     if (specialBackgrounds.includes(o.Background)) {
-      o.Hat = null
-      o.Hand = null
-      o.Back = null
+      o.Back = "None.png"
+      o.Hat = "None.png"
+      o.Hand = "None.png"
     }
   })
 
@@ -241,6 +234,7 @@ const traitFiles = {
     "Golden Wings.png",
     "Golden Jetpack.png",
     "Angel Wings.png",
+    "None.png",
   ],
   Body: [
     "Red Mainframe 09.png",
@@ -373,6 +367,7 @@ const traitFiles = {
     "Magician Hat.png",
     "Pirate Hat.png",
     "Cowboy Hat.png",
+    "None.png",
   ],
   Hand: [
     "Golden Elder Staff.png",
@@ -415,6 +410,7 @@ const traitFiles = {
     "Flash Drive.png",
     "Blue Flash Drive.png",
     "Red Red Lightsaber.png",
+    "None.png",
   ],
 }
 

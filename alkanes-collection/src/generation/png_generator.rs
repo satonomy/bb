@@ -7,15 +7,9 @@ static TRAITS_DIR: Dir = include_dir!("src/generation/traits");
 
 const ENCODED_TRAITS_JSON: &str = include_str!("encoded_traits.json");
 
-/// SVG Generator for NFT images
-/// This struct handles the generation of SVG images for NFTs based on encoded traits
-pub struct SvgGenerator;
+pub struct PngGenerator;
 
-impl SvgGenerator {
-    /// Get the encoded traits from JSON file
-    ///
-    /// # Returns
-    /// * `Value` - JSON value containing encoded traits
+impl PngGenerator {
     pub fn get_encoded_traits() -> Value {
         serde_json::from_str(ENCODED_TRAITS_JSON).unwrap()
     }
@@ -34,7 +28,6 @@ impl SvgGenerator {
             .as_u64()
             .ok_or_else(|| anyhow!("Invalid trait format"))?;
 
-        // 解码顺序: backgrounds, misc, visors, suits
         let mut pre_bits = 0u64;
         let mut get_code = |key: &str| -> anyhow::Result<usize> {
             let bits = format[key]["bits"].as_u64().unwrap();
@@ -63,9 +56,7 @@ impl SvgGenerator {
     }
 
     fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
-        // 移除可能的前缀
         let hex_str = hex_str.trim_start_matches("0x");
-        // 移除可能的前导b
         let hex_str = hex_str.trim_start_matches('b');
 
         match hex::decode(hex_str) {
@@ -73,14 +64,6 @@ impl SvgGenerator {
             Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
         }
     }
-
-    /// Generate PNG image for a specific NFT index by composing trait images
-    ///
-    /// # Arguments
-    /// * `index` - The index of the NFT
-    ///
-    /// # Returns
-    /// * `Result<Vec<u8>>` - PNG image data as byte array
 
     pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
         let (_background, back, body, head, hat, hand) = Self::decode_traits(index)?;
@@ -118,7 +101,7 @@ impl SvgGenerator {
         ];
 
         for (layer, trait_value) in traits.iter() {
-            if trait_value != &"none" {
+            if trait_value != &"none" || trait_value != &"None" {
                 let image_path = format!("{}/{}.png", layer, trait_value);
                 if let Some(file) = TRAITS_DIR.get_file(&image_path) {
                     let trait_img = image::load_from_memory(file.contents())?;
