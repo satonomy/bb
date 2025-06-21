@@ -340,46 +340,74 @@
             })
           )
         })
+
+        let totalGoldenBody = 0
+        const maxGoldenBody = 100
+
         while (combos.size < count) {
           const bgPool = traitFiles.Background.filter(
             (b) => !specialBackgrounds.includes(b)
           )
           const Background = pick(bgPool)
-          const Body = pick(traitFiles.Body)
-          const color =
-            (Body.match(/\b(Red|Blue|Green|Golden)\b/) || [])[1] || null
+
+          const bodyPool = traitFiles.Body.filter((b) =>
+            /\bGolden\b/.test(b) ? totalGoldenBody < maxGoldenBody : true
+          )
+          const Body = pick(bodyPool)
+
+          const m = Body.match(/\b(Red|Blue|Green|Golden)\b/)
+          const color = m ? m[1] : "Gray"
+
           const Back =
             Math.random() < backChance
               ? color === "Golden"
                 ? pick(traitFiles.Back.filter((b) => b.startsWith("Golden")))
                 : pick(traitFiles.Back)
               : null
-          const headPool = color
-            ? traitFiles.Head.filter((h) =>
-                new RegExp(`\\b${color}\\b`).test(h)
-              )
-            : traitFiles.Head
+
+          let headPool
+          if (color === "Gray") {
+            headPool = traitFiles.Head.filter(
+              (h) => !/(Red|Blue|Green|Golden)\b/.test(h)
+            )
+          } else {
+            headPool = traitFiles.Head.filter((h) =>
+              new RegExp(`\\b${color}\\b`).test(h)
+            )
+          }
           const Head = headPool.length ? pick(headPool) : null
-          const handPool = color
-            ? traitFiles.Hand.filter((h) =>
-                new RegExp(`\\b${color}\\b`).test(h)
-              )
-            : traitFiles.Hand
+
+          let handPool
+          if (color === "Gray") {
+            handPool = traitFiles.Hand.filter(
+              (h) => !/(Red|Blue|Green|Golden)\b/.test(h)
+            )
+          } else {
+            handPool = traitFiles.Hand.filter((h) =>
+              new RegExp(`\\b${color}\\b`).test(h)
+            )
+          }
           const Hand =
             Math.random() < handChance
               ? weightedPick(handPool, getHandWeights(handPool))
               : null
-          combos.add(
-            JSON.stringify({ Background, Back, Body, Head, Hat: null, Hand })
-          )
+
+          const combo = { Background, Back, Body, Head, Hat: null, Hand }
+          const comboKey = JSON.stringify(combo)
+          if (!combos.has(comboKey)) {
+            combos.add(comboKey)
+            if (/\bGolden\b/.test(Body)) totalGoldenBody++
+          }
         }
+
         const arr = Array.from(combos).map((s) => JSON.parse(s))
         const usage = {}
         traitFiles.Hat.forEach((h) => (usage[h] = 0))
         const maxUses = 2
         arr.forEach((o) => {
-          if (specialBackgrounds.includes(o.Background)) return (o.Hat = null)
-          if (o.Body && o.Body.includes("Golden")) {
+          if (specialBackgrounds.includes(o.Background)) {
+            o.Hat = null
+          } else if (o.Body && o.Body.includes("Golden")) {
             const avail = traitFiles.Hat.filter((h) => usage[h] < maxUses)
             if (avail.length) {
               o.Hat = pick(avail)
@@ -391,6 +419,7 @@
             o.Hat = weightedPick(traitFiles.Hat, { "Mice Hat.png": 0.5 })
           }
         })
+
         return arr
       }
 
@@ -404,7 +433,6 @@
             const i = new Image()
             i.onload = () => res(i)
             i.onerror = () => res(null)
-            // if bg
             if (layer.key === "Background") {
               i.src = `../../../alkanes-image/src/traits/${
                 layer.folder

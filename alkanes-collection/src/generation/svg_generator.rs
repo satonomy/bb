@@ -81,6 +81,7 @@ impl SvgGenerator {
     ///
     /// # Returns
     /// * `Result<Vec<u8>>` - PNG image data as byte array
+
     pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
         let (_background, back, body, head, hat, hand) = Self::decode_traits(index)?;
 

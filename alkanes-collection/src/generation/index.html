@@ -1,0 +1,107 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="./" />
+    <title>10k NFT Generator & Filter</title>
+    <style>
+      body {
+        background: #18181b;
+        color: #fff;
+        font-family: monospace;
+        padding: 2rem;
+      }
+      button,
+      select {
+        background: #23232b;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        margin: 0 0.3rem 1rem 0;
+        padding: 6px 16px;
+      }
+      #controls {
+        margin-bottom: 1rem;
+        display: none;
+      }
+      #stats {
+        margin-bottom: 1rem;
+        background: #222;
+        border-radius: 12px;
+        padding: 12px;
+        display: none;
+      }
+      #previewArea {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        margin: 2rem 0;
+      }
+      .nft-preview {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .nft-stack {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        background: #18181b;
+      }
+      .nft-stack img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 120px;
+        height: 120px;
+      }
+      .nft-index {
+        color: #aaa;
+        font-size: 11px;
+      }
+      #paging {
+        margin: 1.5rem 0 1rem 0;
+        display: none;
+      }
+      #paging button {
+        padding: 5px 18px;
+      }
+      #metadata {
+        background: #222;
+        color: #fff;
+        padding: 12px;
+        border-radius: 8px;
+        max-height: 300px;
+        overflow: auto;
+        font-size: 12px;
+        white-space: pre;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>10,000 NFT Generator, Filter & Preview</h2>
+    <button id="generate10k">Generate 10,000 NFTs</button>
+    <div id="controls">
+      Filter:
+      <select id="filterLayer">
+        <option value="">(Choose layer)</option>
+        <option value="Back">Back</option>
+        <option value="Body">Body</option>
+        <option value="Head">Head</option>
+        <option value="Hat">Hat</option>
+        <option value="Hand">Hand</option>
+      </select>
+      <select id="filterTrait" style="display: none"></select>
+      <button id="clearFilter" style="display: none">Show All</button>
+    </div>
+    <div id="stats"></div>
+
+    <div id="previewArea"></div>
+    <div id="paging"></div>
+    <pre id="metadata"></pre>
+
+    <script src="nft-data.js"></script>
+    <script src="nft-ui.js"></script>
+  </body>
+</html>
