@@ -130,7 +130,7 @@ enum CollectionMessage {
     #[returns(String)]
     GetCollectionIdentifier,
 
-    /// Get SVG data for a specific orbital
+    /// Get PNG data for a specific orbital
     ///
     /// # Arguments
     /// * `index` - The index of the orbital
