@@ -6,8 +6,7 @@ echo "Starting optimized WASM build..."
 # 1. Clean previous build artifacts
 cargo clean
 
-# 2. Set size optimizations & enable bulk-memory (no global LTO on all crates)
-#    and allow saturating float-to-int conversions
+# 2. Set size optimizations & enable bulk-memory
 export RUSTFLAGS="-C opt-level=z -C codegen-units=1 -C target-feature=+bulk-memory"
 
 # 3. Compile release‐optimized WASM
@@ -21,21 +20,18 @@ echo "Original WASM size: ${ORIG_SIZE} bytes"
 
 # 5. Run wasm-opt for further size reduction
 if command -v wasm-opt &> /dev/null; then
-    echo "Running wasm-opt (bulk-memory & saturating float-to-int enabled)..."
-    wasm-opt --enable-bulk-memory --enable-saturating-float-to-int -Oz \
-      "$ORIG" \
-      -o "${ORIG%.wasm}_optimized.wasm"
-
-    OPT="${ORIG%.wasm}_optimized.wasm"
-    OPT_SIZE=$(wc -c < "$OPT")
+    echo "Optimizing with wasm-opt (attempting bulk-memory)..."
+    OPT_PATH="${ORIG%.wasm}_optimized.wasm"
+    # try bulk-memory flag first
+    if wasm-opt --enable-bulk-memory -Oz "$ORIG" -o "$OPT_PATH"; then
+        echo "wasm-opt with bulk-memory succeeded"
+    else
+        echo "--enable-bulk-memory unsupported, retrying without it"
+        wasm-opt -Oz "$ORIG" -o "$OPT_PATH"
+    fi
+    
+    OPT_SIZE=$(wc -c < "$OPT_PATH")
     echo "Optimized WASM size: ${OPT_SIZE} bytes"
 
     SAVED=$((ORIG_SIZE - OPT_SIZE))
-    PCT=$(echo "scale=2; $SAVED * 100 / $ORIG_SIZE" | bc)
-    echo "Size reduced by: ${SAVED} bytes (${PCT}%)"
-else
-    echo "wasm-opt not installed; skipping optimization"
-    echo "Install via: npm install -g binaryen"
-fi
-
-echo "Build complete!"
+    PCT=$(echo "scale=2; 
