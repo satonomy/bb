@@ -8,8 +8,6 @@ const specialBackgrounds = [
   "Airhead.png",
   "Satonomy.png",
   "Square Head.png",
-  "Dark Force.png",
-  "Light Force.png",
 ]
 
 const multiColorBody = [
