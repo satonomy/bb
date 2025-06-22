@@ -8,12 +8,18 @@ The collection contract for Alkanes Orbitals.
 cargo build --target wasm32-unknown-unknown --release
 ```
 
+## Check size
+
+```bash
+sudo ls -lh target/wasm32-unknown-unknown/release/alkanes_collection.wasm
+```
+
 The compiled WASM binary will be available in `target/wasm32-unknown-unknown/release/alkanes_collection.wasm`.
 
 ## Deployment
 
 ```bash
-oyl alkane new-contract -c ./target/alkanes/wasm32-unknown-unknown/release/alkanes_collection.wasm -data 1,0 -p signet
+oyl alkane new-contract -c ./target/alkanes/wasm32-unknown-unknown/release/alkanes_collection.wasm -data 1,0 -p oylnet
 ```
 
 ## Tracing

@@ -8,8 +8,6 @@ const specialBackgrounds = [
   "Airhead.png",
   "Satonomy.png",
   "Square Head.png",
-  "Dark Force.png",
-  "Light Force.png",
 ]
 
 const multiColorBody = [
@@ -37,8 +35,6 @@ const traitFiles = {
     "Airhead.png",
     "Satonomy.png",
     "Square Head.png",
-    "Dark Force.png",
-    "Light Force.png",
   ],
   Back: [
     "Fairy Wings.png",
@@ -411,7 +407,7 @@ const format = {
   Hand: { shift: 10, mask: "0x3f", bits: 6 }, // increased to 6 bits for up to 64 hands
   Hat: { shift: 16, mask: "0x1f", bits: 5 }, // moved to bit 16
   Head: { shift: 21, mask: "0x3f", bits: 6 }, // moved to bit 21
-  Background: { shift: 27, mask: "0x1f", bits: 5 }, // now 32 values instead of 16
+  Background: { shift: 27, mask: "0x1f", bits: 4 }, // now 32 values instead of 16
 }
 
 const indices = {}
