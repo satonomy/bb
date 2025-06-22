@@ -101,7 +101,7 @@ impl PngGenerator {
         ];
 
         for (layer, trait_value) in traits.iter() {
-            if trait_value != &"none" || trait_value != &"None" {
+            if trait_value != &"none" {
                 let image_path = format!("{}/{}.png", layer, trait_value);
                 if let Some(file) = TRAITS_DIR.get_file(&image_path) {
                     let trait_img = image::load_from_memory(file.contents())?;
