@@ -79,12 +79,12 @@ function updateStats(arr) {
 
 function updateMetadata() {
   const format = {
-    Back: { shift: 0, mask: "0xf", bits: 4 },
-    Body: { shift: 4, mask: "0x3f", bits: 6 },
-    Hand: { shift: 10, mask: "0x1f", bits: 5 },
-    Hat: { shift: 15, mask: "0x1f", bits: 5 },
-    Head: { shift: 20, mask: "0x3f", bits: 6 },
-    Background: { shift: 26, mask: "0xf", bits: 4 },
+    Back: { shift: 0, mask: "0xf", bits: 4 }, // 4 bits supports 16 backgrounds
+    Body: { shift: 4, mask: "0x3f", bits: 6 }, // 6 bits supports 64 bodies
+    Hand: { shift: 10, mask: "0x3f", bits: 6 }, // increased to 6 bits for up to 64 hands
+    Hat: { shift: 16, mask: "0x1f", bits: 5 }, // moved to bit 16
+    Head: { shift: 21, mask: "0x3f", bits: 6 }, // moved to bit 21
+    Background: { shift: 27, mask: "0x1f", bits: 5 }, // now 32 values instead of 16
   }
   const indices = {}
   Object.keys(format).forEach((layer) => {
