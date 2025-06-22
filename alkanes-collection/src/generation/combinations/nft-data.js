@@ -2,12 +2,12 @@ const specialBackgrounds = [
   "Alkane Pandas.png",
   "Dead Alkanes.png",
   "Oyly.png",
-  "Holographic.png",
+  "Light Force.png",
   "Orbinauts.png",
   "Alchemist.png",
   "Airhead.png",
   "Satonomy.png",
-  "Square Head.png",
+  "Dark Force.png",
 ]
 
 const multiColorBody = [
@@ -29,12 +29,12 @@ const traitFiles = {
     "Alkane Pandas.png",
     "Dead Alkanes.png",
     "Oyly.png",
-    "Holographic.png",
+    "Light Force.png",
     "Orbinauts.png",
     "Alchemist.png",
     "Airhead.png",
     "Satonomy.png",
-    "Square Head.png",
+    "Dark Force.png",
   ],
   Back: [
     "Fairy Wings.png",

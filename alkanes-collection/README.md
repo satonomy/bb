@@ -25,7 +25,7 @@ oyl alkane new-contract -c ./target/alkanes/wasm32-unknown-unknown/release/alkan
 ## Tracing
 
 ```bash
-yarn oyl provider alkanes --method trace -params '{"txid":"a1ccb55a8a66b9ddcd4340c6f03bd25c44159a7fe59e663e123c35f2028f7ecc", "vout":3}' -p signet
+oyl provider alkanes --method trace -params '{"txid":"f0513c7ef6f6816e208770d19eff7db4d284132686cf1f3f8d26236284d07f61", "vout":0}' -p oylnet
 ```
 
 ### output whitelist
