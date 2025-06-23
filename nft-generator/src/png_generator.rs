@@ -59,16 +59,6 @@ impl PngGenerator {
         Ok((background, back, body, head, hat, hand))
     }
 
-    fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
-        let hex_str = hex_str.trim_start_matches("0x");
-        let hex_str = hex_str.trim_start_matches('b');
-
-        match hex::decode(hex_str) {
-            Ok(bytes) => Ok(bytes),
-            Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
-        }
-    }
-
     // 删除旧的generate_png实现，保留如下新实现：
     pub fn generate_png(index: u128) -> Result<Vec<u8>> {
         let (background, back, body, head, hat, hand) = Self::decode_traits(index)?;
