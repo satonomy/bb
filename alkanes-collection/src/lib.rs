@@ -24,12 +24,12 @@ use std::sync::Arc;
 
 pub mod generation;
 
-const ORBITAL_TEMPLATE_ID: u128 = 111111;
+const ORBITAL_TEMPLATE_ID: u128 = 311119;
 
 // TODO -- CHANGE
 const ALKANE_BG_ID: AlkaneId = AlkaneId {
     block: 2,
-    tx: 26177,
+    tx: 1229,
 };
 
 const CONTRACT_NAME: &str = "Satonomy Beep Boop";
@@ -37,8 +37,8 @@ const CONTRACT_SYMBOL: &str = "Beep Boop";
 const MAX_MINTS: u128 = 10000;
 const WHITELIST_MAX_PURCHASE_PER_TX: u128 = 3;
 const PUBLIC_MAX_PURCHASE_PER_TX: u128 = 3;
-const WHITELIST_MINT_START_BLOCK: u64 = 902443;
-const PUBLIC_MINT_START_BLOCK: u64 = 902473;
+const WHITELIST_MINT_START_BLOCK: u64 = 1;
+const PUBLIC_MINT_START_BLOCK: u64 = 1;
 
 // TODO -- DOUBLE CHECK
 const TAPROOT_SCRIPT_PUBKEY: [u8; 34] = [
@@ -590,19 +590,8 @@ impl Collection {
     pub fn get_data(&self, index: u128) -> Result<CallResponse> {
         let context = self.context()?;
         let mut response = CallResponse::forward(&context.incoming_alkanes);
-        let (background, _back, _body, _head, _hat, _hand) = PngGenerator::decode_traits(index)?;
-
-        let (f, s) = encode_string_to_u128(&background);
-        let cellpack = Cellpack {
-            target: ALKANE_BG_ID,
-            inputs: vec![1001, f, s],
-        };
-
-        let call_response =
-            self.staticcall(&cellpack, &AlkaneTransferParcel::default(), self.fuel())?;
-
-        let bg = call_response.data;
-        response.data = PngGenerator::generate_png(index, bg)?;
+        
+        response.data = PngGenerator::generate_png(index)?;
         Ok(response)
     }
 

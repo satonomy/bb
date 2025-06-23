@@ -28,7 +28,6 @@ hex = "0.4"
 rs_merkle = "1.5.0"
 # 优化image库，只启用必要的特性
 image = { version = "0.24", default-features = false, features = ["png"] }
-base64 = "0.22"
 include_dir = "0.7"
 
 [dev-dependencies]

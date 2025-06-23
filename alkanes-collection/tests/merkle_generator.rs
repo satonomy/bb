@@ -9,6 +9,7 @@ use std::str::FromStr;
 use wasm_bindgen_test::*;
 #[cfg(target_arch = "wasm32")]
 use web_sys::console;
+use alkanes_collection::generation::png_generator::PngGenerator;
 
 macro_rules! test_print {
     ($($arg:tt)*) => {
@@ -171,4 +172,29 @@ fn test_pointer_count() {
     alkane.add_script_minted_count(947, 5, 5).unwrap();
     assert_eq!(alkane.get_script_minted_count(4).unwrap(), 5u128);
     assert_eq!(alkane.add_script_minted_count(4, 5, 5).is_err(), true);
+}
+
+#[wasm_bindgen_test]
+fn test_decode_traits() {
+    test_print!("开始测试 decode_traits 方法，索引范围: 0-100");
+    
+    let mut success_count = 0;
+    let mut total_count = 0;
+    
+    for index in 0..=100 {
+        total_count += 1;
+        match PngGenerator::decode_traits(index) {
+            Ok((background, back, body, head, hat, hand)) => {
+                success_count += 1;
+                test_print!("索引 {}: Background={}, Back={}, Body={}, Head={}, Hat={}, Hand={}", 
+                    index, background, back, body, head, hat, hand);
+            }
+            Err(e) => {
+                // 不显示错误信息，只统计成功率
+            }
+        }
+    }
+    
+    test_print!("decode_traits 测试完成");
+    test_print!("成功率: {}/{} ({:.1}%)", success_count, total_count, (success_count as f64 / total_count as f64) * 100.0);
 }

@@ -3,7 +3,7 @@ use hex;
 use image::{imageops, DynamicImage, ImageBuffer, Rgba, RgbaImage};
 use include_dir::{include_dir, Dir};
 use serde_json::Value;
-static TRAITS_DIR: Dir = include_dir!("src/generation/traits");
+static TRAITS_DIR: Dir = include_dir!("src/traits");
 
 const ENCODED_TRAITS_JSON: &str = include_str!("encoded_traits.json");
 
@@ -63,6 +63,7 @@ impl PngGenerator {
         }
     }
 
+    // 删除旧的generate_png实现，保留如下新实现：
     pub fn generate_png(index: u128) -> Result<Vec<u8>> {
         let (background, back, body, head, hat, hand) = Self::decode_traits(index)?;
 
@@ -108,6 +109,7 @@ impl PngGenerator {
         dynamic_img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png)?;
         Ok(buf)
     }
+    
 
     /// Get attributes for a specific NFT index
     ///
