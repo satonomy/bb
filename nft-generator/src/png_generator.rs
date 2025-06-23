@@ -28,16 +28,22 @@ impl PngGenerator {
             .as_u64()
             .ok_or_else(|| anyhow!("Invalid trait format"))?;
 
-        let mut pre_bits = 0u64;
-        let mut get_code = |key: &str| -> Option<usize> {
-            let bits = format.get(key)?.get("bits")?.as_u64()?;
-            let code = ((encoded >> pre_bits) & ((1u64 << bits) - 1)) as usize;
-            pre_bits += bits;
-            Some(code)
+        let get_code = |key: &str| -> Option<usize> {
+            let shift = format.get(key)?.get("shift")?.as_u64()?;
+            let mask_str = format
+                .get(key)?
+                .get("mask")?
+                .as_str()?
+                .trim_start_matches("0x");
+            let mask = u64::from_str_radix(mask_str, 16).ok()?;
+            Some(((encoded >> shift) & mask) as usize)
         };
         let get_index_str = |cat: &str, code: Option<usize>| -> String {
             if let (Some(arr), Some(idx)) = (indices.get(cat).and_then(|v| v.as_array()), code) {
-                arr.get(idx).and_then(|v| v.as_str()).unwrap_or("None").to_string()
+                arr.get(idx)
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("None")
+                    .to_string()
             } else {
                 "None".to_string()
             }
@@ -109,7 +115,6 @@ impl PngGenerator {
         dynamic_img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png)?;
         Ok(buf)
     }
-    
 
     /// Get attributes for a specific NFT index
     ///
