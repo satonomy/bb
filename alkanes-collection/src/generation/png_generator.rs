@@ -59,24 +59,32 @@ impl PngGenerator {
         Ok((background, back, body, head, hat, hand))
     }
 
-    pub fn generate_png(index: u128) -> Result<Vec<u8>> {
-        let (background, back, body, head, hat, hand) = Self::decode_traits(index)?;
+    pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
+        let (_background, back, body, head, hat, hand) = Self::decode_traits(index)?;
 
         let mut base_image: RgbaImage = ImageBuffer::new(420, 420);
 
         for pixel in base_image.pixels_mut() {
-            *pixel = Rgba([0, 0, 0, 0]); // transparent
+            *pixel = Rgba([0, 0, 0, 0]); // 透明
         }
 
-        // 加载背景图片
-        if background != "None" {
-            let bg_image_path = format!("Background/{}.png", background);
-            if let Some(file) = TRAITS_DIR.get_file(&bg_image_path) {
-                let bg_img = image::load_from_memory(file.contents())?;
-                let bg_rgba = bg_img.to_rgba8();
-                imageops::overlay(&mut base_image, &bg_rgba, 0, 0);
-            }
+        let bg_bytes = if bg.starts_with(b"0x") || bg.starts_with(b"b") {
+            let hex_str = String::from_utf8_lossy(&bg);
+            Self::hex_to_bytes(&hex_str)?
+        } else {
+            bg
+        };
+
+        if bg_bytes.is_empty() {
+            return Err(anyhow!("Background data is empty"));
         }
+
+        let bg_image = match ImageBuffer::from_raw(420, 420, bg_bytes) {
+            Some(img) => img,
+            None => return Err(anyhow!("Failed to create image from raw data")),
+        };
+
+        imageops::overlay(&mut base_image, &bg_image, 0, 0);
 
         let traits = [
             ("Back", &back),
@@ -87,7 +95,7 @@ impl PngGenerator {
         ];
 
         for (layer, trait_value) in traits.iter() {
-            if trait_value != &"None" {
+            if trait_value != &"none" {
                 let image_path = format!("{}/{}.png", layer, trait_value);
                 if let Some(file) = TRAITS_DIR.get_file(&image_path) {
                     let trait_img = image::load_from_memory(file.contents())?;
@@ -103,6 +111,19 @@ impl PngGenerator {
         let mut buf = Vec::new();
         dynamic_img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png)?;
         Ok(buf)
+    }
+
+    /// 将十六进制字符串转换为字节数组
+    fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
+        // 移除可能的前缀
+        let hex_str = hex_str.trim_start_matches("0x");
+        // 移除可能的前导b
+        let hex_str = hex_str.trim_start_matches('b');
+
+        match hex::decode(hex_str) {
+            Ok(bytes) => Ok(bytes),
+            Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
+        }
     }
 
     /// Get attributes for a specific NFT index

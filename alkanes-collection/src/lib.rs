@@ -24,12 +24,11 @@ use std::sync::Arc;
 
 pub mod generation;
 
-const ORBITAL_TEMPLATE_ID: u128 = 311119;
+const ORBITAL_TEMPLATE_ID: u128 = 111115;
 
-// TODO -- CHANGE
 const ALKANE_BG_ID: AlkaneId = AlkaneId {
     block: 2,
-    tx: 1229,
+    tx: 31060,
 };
 
 const CONTRACT_NAME: &str = "Satonomy Beep Boop";
@@ -37,23 +36,21 @@ const CONTRACT_SYMBOL: &str = "Beep Boop";
 const MAX_MINTS: u128 = 10000;
 const WHITELIST_MAX_PURCHASE_PER_TX: u128 = 3;
 const PUBLIC_MAX_PURCHASE_PER_TX: u128 = 3;
-const WHITELIST_MINT_START_BLOCK: u64 = 1;
-const PUBLIC_MINT_START_BLOCK: u64 = 1;
+const WHITELIST_MINT_START_BLOCK: u64 = 902536;
+const PUBLIC_MINT_START_BLOCK: u64 = 902566;
 
-// TODO -- DOUBLE CHECK
 const TAPROOT_SCRIPT_PUBKEY: [u8; 34] = [
-    0x51, 0x20, 0x9c, 0x2f, 0xf8, 0x00, 0x83, 0xd8, 0x6e, 0xa2, 0x94, 0x00, 0x8c, 0x03, 0x67, 0xb3,
-    0x1b, 0xe3, 0xb8, 0x5c, 0x39, 0x19, 0x77, 0x12, 0x8c, 0x66, 0xbb, 0x84, 0x10, 0x14, 0xeb, 0x09,
-    0x7e, 0x81,
+    0x51, 0x20, 0x7f, 0xd6, 0xeb, 0x82, 0xa4, 0x3a, 0x36, 0xa7, 0xe8, 0x6d, 0xc0, 0x14, 0xf6, 0xd4,
+    0x2b, 0x9a, 0xfe, 0xc3, 0x8b, 0x53, 0xfa, 0x9f, 0x3b, 0x47, 0x0b, 0xfc, 0x41, 0x89, 0x8d, 0x35,
+    0xb4, 0x8c,
 ];
 
 const MERKLE_ROOT: [u8; 32] = [
-    0xb0, 0x11, 0x58, 0xdf, 0xf6, 0xf0, 0xc3, 0xa4, 0xdc, 0x73, 0x8b, 0xa0, 0x35, 0x3b, 0xe6, 0x1d,
-    0xce, 0x77, 0x53, 0xed, 0x88, 0x62, 0x15, 0xbb, 0x9c, 0x96, 0xdf, 0xbe, 0xcd, 0x84, 0x6f, 0x12,
+    0xbb, 0xae, 0x5e, 0x59, 0x21, 0x8e, 0x9b, 0x85, 0xf6, 0xa9, 0x67, 0x0b, 0x28, 0xa1, 0xdc, 0x9a,
+    0xc3, 0xe8, 0x3d, 0xd6, 0x63, 0x6b, 0xa9, 0xd2, 0x39, 0xba, 0x08, 0x64, 0xf1, 0x11, 0x1b, 0xab,
 ];
 
-// TODO UPDATE
-const MERKLE_LEAF_COUNT: u128 = 6500;
+const MERKLE_LEAF_COUNT: u128 = 7535;
 
 /// Price per NFT in payment tokens
 const BTC_MINT_PRICE: u128 = 10000;
@@ -235,19 +232,16 @@ impl Collection {
         StoragePointer::from_keyword("/public-mint-addresses")
     }
 
-    /// Check if an address has already minted in public phase
-    fn has_public_minted(&self, output_script: &Vec<u8>) -> bool {
-        self.public_mint_addresses_pointer()
-            .select(output_script)
-            .get_value::<u8>()
-            == 1
-    }
+    pub fn check_ins_public_minted(&self, output_script: &Vec<u8>,count:u8) -> Result<()> {
+        let current_count = self.public_mint_addresses_pointer().select(output_script).get_value::<u8>();
+        let new_count = current_count.checked_add(count)
+            .ok_or_else(|| anyhow!("Minted count exceeds overflow."))?;
 
-    /// Mark an address as having minted in public phase
-    fn mark_public_minted(&self, output_script: &Vec<u8>) {
-        self.public_mint_addresses_pointer()
-            .select(output_script)
-            .set_value::<u8>(1);
+        if new_count > PUBLIC_MAX_PURCHASE_PER_TX as u8 {
+            return Err(anyhow!("Minted count exceeds limit."));
+        }
+        self.public_mint_addresses_pointer().select(output_script).set_value(new_count);
+        Ok(())
     }
 
     /// Common pre-mint checks
@@ -284,11 +278,7 @@ impl Collection {
                 }
             };
             let output_script = tx.output[0].script_pubkey.clone().into_bytes().to_vec();
-            if self.has_public_minted(&output_script) {
-                return Err(anyhow!("Address has already minted in public phase"));
-            }
-            // Mark address as minted in public phase
-            self.mark_public_minted(&output_script);
+            self.check_ins_public_minted(&output_script, count as u8)?
         }
 
         Ok(())
@@ -590,8 +580,22 @@ impl Collection {
     pub fn get_data(&self, index: u128) -> Result<CallResponse> {
         let context = self.context()?;
         let mut response = CallResponse::forward(&context.incoming_alkanes);
-        
-        response.data = PngGenerator::generate_png(index)?;
+        let (background, _back, _body, _head, _hat, _hand) = PngGenerator::decode_traits(index)?;
+
+        let (f, s) = encode_string_to_u128(&background);
+        let cellpack = Cellpack {
+            target: ALKANE_BG_ID,
+            inputs: vec![1001, f, s],
+        };
+
+        let call_response = self.staticcall(
+            &cellpack,
+            &AlkaneTransferParcel::default(),
+            self.fuel(),
+        )?;
+
+        let bg = call_response.data;
+        response.data = PngGenerator::generate_png(index, bg)?;
         Ok(response)
     }
 
