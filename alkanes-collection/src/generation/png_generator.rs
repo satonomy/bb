@@ -24,45 +24,39 @@ impl PngGenerator {
             .ok_or_else(|| anyhow!("Invalid items array"))?;
         let encoded = items
             .get(index as usize)
-            .ok_or_else(|| anyhow!("Invalid trait index"))?
+            .ok_or_else(|| anyhow!("Invalid trait index: {}", index))?
             .as_u64()
             .ok_or_else(|| anyhow!("Invalid trait format"))?;
 
-        let mut pre_bits = 0u64;
-        let mut get_code = |key: &str| -> anyhow::Result<usize> {
-            let bits = format[key]["bits"].as_u64().unwrap();
-            let code = ((encoded >> pre_bits) & ((1u64 << bits) - 1)) as usize;
-            pre_bits += bits;
-            Ok(code)
+        let get_code = |key: &str| -> Option<usize> {
+            let shift = format.get(key)?.get("shift")?.as_u64()?;
+            let mask_str = format
+                .get(key)?
+                .get("mask")?
+                .as_str()?
+                .trim_start_matches("0x");
+            let mask = u64::from_str_radix(mask_str, 16).ok()?;
+            Some(((encoded >> shift) & mask) as usize)
         };
-        let background_code = get_code("Background")?;
-        let back_code = get_code("Back")?;
-        let body_code = get_code("Body")?;
-        let head_code = get_code("Head")?;
-        let hat_code = get_code("Hat")?;
-        let hand_code = get_code("Hand")?;
+        let get_index_str = |cat: &str, code: Option<usize>| -> String {
+            if let (Some(arr), Some(idx)) = (indices.get(cat).and_then(|v| v.as_array()), code) {
+                arr.get(idx)
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("None")
+                    .to_string()
+            } else {
+                "None".to_string()
+            }
+        };
 
-        let background = indices["Background"][background_code]
-            .as_str()
-            .unwrap()
-            .to_string();
-        let back = indices["Back"][back_code].as_str().unwrap().to_string();
-        let body = indices["Body"][body_code].as_str().unwrap().to_string();
-        let head = indices["Head"][head_code].as_str().unwrap().to_string();
-        let hat = indices["Hat"][hat_code].as_str().unwrap().to_string();
-        let hand = indices["Hand"][hand_code].as_str().unwrap().to_string();
+        let background = get_index_str("Background", get_code("Background"));
+        let back = get_index_str("Back", get_code("Back"));
+        let body = get_index_str("Body", get_code("Body"));
+        let head = get_index_str("Head", get_code("Head"));
+        let hat = get_index_str("Hat", get_code("Hat"));
+        let hand = get_index_str("Hand", get_code("Hand"));
 
         Ok((background, back, body, head, hat, hand))
-    }
-
-    fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
-        let hex_str = hex_str.trim_start_matches("0x");
-        let hex_str = hex_str.trim_start_matches('b');
-
-        match hex::decode(hex_str) {
-            Ok(bytes) => Ok(bytes),
-            Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
-        }
     }
 
     pub fn generate_png(index: u128, bg: Vec<u8>) -> Result<Vec<u8>> {
@@ -71,7 +65,7 @@ impl PngGenerator {
         let mut base_image: RgbaImage = ImageBuffer::new(420, 420);
 
         for pixel in base_image.pixels_mut() {
-            *pixel = Rgba([0, 0, 0, 0]); // transparent
+            *pixel = Rgba([0, 0, 0, 0]); // 透明
         }
 
         let bg_bytes = if bg.starts_with(b"0x") || bg.starts_with(b"b") {
@@ -117,6 +111,19 @@ impl PngGenerator {
         let mut buf = Vec::new();
         dynamic_img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png)?;
         Ok(buf)
+    }
+
+    /// 将十六进制字符串转换为字节数组
+    fn hex_to_bytes(hex_str: &str) -> Result<Vec<u8>> {
+        // 移除可能的前缀
+        let hex_str = hex_str.trim_start_matches("0x");
+        // 移除可能的前导b
+        let hex_str = hex_str.trim_start_matches('b');
+
+        match hex::decode(hex_str) {
+            Ok(bytes) => Ok(bytes),
+            Err(e) => Err(anyhow!("Failed to decode hex string: {}", e)),
+        }
     }
 
     /// Get attributes for a specific NFT index
